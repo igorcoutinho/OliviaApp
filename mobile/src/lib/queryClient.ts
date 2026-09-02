@@ -13,4 +13,5 @@ export const queryKeys = {
   feed: ['feed'] as const,
   myVideos: ['myVideos'] as const,
   me: ['me'] as const,
+  profile: ['profile'] as const,
 };

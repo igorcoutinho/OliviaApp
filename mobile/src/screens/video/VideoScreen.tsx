@@ -1,23 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, RefreshControl,
+  ScrollView, RefreshControl, Alert,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen, Button, LoadingScreen, EmptyState } from '../../components/ui';
-import { PageHeader } from '../../components/layout/PageHeader';
+import { Screen, Button, EmptyState, GradientButton } from '../../components/ui';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import {
+  CapsuleCard,
+  RecordMessageButton,
+  YourVideosHeader,
+  VideoEmptyState,
+  VideoHistoryCard,
+} from '../../components/video';
 import { useMyVideosQuery, useUploadVideoMutation } from '../../hooks/useVideos';
-import { colors, spacing, fontSize, radius, shadows } from '../../theme';
+import { colors, spacing, radius, shadows, typography } from '../../theme';
 
 type Mode = 'home' | 'recording' | 'preview';
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleString('pt-BR', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  });
-}
 
 function VideoPreview({ uri, onRetake }: { uri: string; onRetake: () => void }) {
   const player = useVideoPlayer(uri, (p) => { p.loop = false; });
@@ -67,26 +69,25 @@ function RecordingView({
 
   return (
     <View style={styles.recordingRoot}>
-      <CameraView ref={cameraRef} style={styles.camera} mode="video" facing="front">
-        <View style={styles.recordingOverlay}>
-          <TouchableOpacity style={styles.backBtn} onPress={onCancel}>
-            <Ionicons name="chevron-back" size={24} color={colors.white} />
-          </TouchableOpacity>
+      <CameraView ref={cameraRef} style={styles.camera} mode="video" facing="front" />
+      <View style={styles.recordingOverlay}>
+        <TouchableOpacity style={styles.backBtn} onPress={onCancel}>
+          <Ionicons name="chevron-back" size={24} color={colors.white} />
+        </TouchableOpacity>
 
-          <View style={styles.controls}>
-            {isRecording && <Text style={styles.timer}>{formatTime(seconds)}</Text>}
-            <TouchableOpacity
-              style={[styles.recordBtn, isRecording && styles.recordBtnActive]}
-              onPress={() => isRecording ? cameraRef.current?.stopRecording() : handleRecord()}
-            >
-              <View style={[styles.recordInner, isRecording && styles.recordInnerStop]} />
-            </TouchableOpacity>
-            <Text style={styles.hint}>
-              {isRecording ? 'Toque para parar' : 'Toque para gravar'}
-            </Text>
-          </View>
+        <View style={styles.controls}>
+          {isRecording && <Text style={styles.timer}>{formatTime(seconds)}</Text>}
+          <TouchableOpacity
+            style={[styles.recordBtn, isRecording && styles.recordBtnActive]}
+            onPress={() => isRecording ? cameraRef.current?.stopRecording() : handleRecord()}
+          >
+            <View style={[styles.recordInner, isRecording && styles.recordInnerStop]} />
+          </TouchableOpacity>
+          <Text style={styles.hint}>
+            {isRecording ? 'Toque para parar' : 'Toque para gravar'}
+          </Text>
         </View>
-      </CameraView>
+      </View>
     </View>
   );
 }
@@ -120,13 +121,45 @@ export function VideoScreen() {
     setMode('home');
   };
 
+  const ensurePermissions = async () => {
+    let cam = camPerm;
+    let mic = micPerm;
+    if (!cam?.granted) cam = await requestCam();
+    if (!mic?.granted) mic = await requestMic();
+    return cam?.granted && mic?.granted;
+  };
+
   const startRecording = async () => {
-    if (!camPerm?.granted || !micPerm?.granted) {
-      await requestCam();
-      await requestMic();
-      return;
-    }
+    const granted = await ensurePermissions();
+    if (!granted) return;
     setMode('recording');
+  };
+
+  const pickFromGallery = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setRecordedUri(result.assets[0].uri);
+      setMode('preview');
+    }
+  };
+
+  const handleRecordPress = () => {
+    Alert.alert(
+      'Sua mensagem',
+      'Como você quer enviar?',
+      [
+        { text: 'Gravar agora', onPress: startRecording },
+        { text: 'Escolher da galeria', onPress: pickFromGallery },
+        { text: 'Cancelar', style: 'cancel' },
+      ],
+    );
   };
 
   if (mode === 'recording') {
@@ -142,14 +175,14 @@ export function VideoScreen() {
     return (
       <Screen>
         <ScrollView contentContainerStyle={styles.previewContent} keyboardShouldPersistTaps="handled">
-          <PageHeader title="Revisar mensagem" subtitle="Só envie se estiver feliz com o vídeo" />
+          <ScreenHeader title="Revisar mensagem" subtitle="Confira antes de plantar no baú" />
           <VideoPreview uri={recordedUri} onRetake={() => { setRecordedUri(null); setMode('recording'); }} />
 
           <Text style={styles.previewLabel}>Mensagem para a Olívia (opcional)</Text>
           <TextInput
             style={styles.messageInput}
             placeholder="Ex: Quando você abrir isso, quero que saiba o quanto te amamos..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.moss}
             value={message}
             onChangeText={setMessage}
             multiline
@@ -157,8 +190,8 @@ export function VideoScreen() {
           />
 
           <View style={styles.previewActions}>
-            <Button
-              label="Enviar para o baú do tempo 💕"
+            <GradientButton
+              label="Plantar no baú do tempo"
               onPress={handleSend}
               loading={upload.isPending}
             />
@@ -171,193 +204,82 @@ export function VideoScreen() {
 
   if (isLoading) return <Screen loading loadingMessage="Carregando seus vídeos..." />;
 
-  const needsPermission = !camPerm?.granted || !micPerm?.granted;
+  const videoCount = videos?.length ?? 0;
 
   return (
     <Screen>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.scroll}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.sageDark} />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.sage} />
         }
+        showsVerticalScrollIndicator={false}
       >
-        <PageHeader title="Mensagem para Olívia" subtitle="Baú do tempo · 10 anos" />
+        <ScreenHeader
+          title="Mensagem para Olívia"
+          subtitle="Cápsula do tempo mágica"
+        />
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoEmoji}>💌</Text>
-          <Text style={styles.infoTitle}>Um presente para o futuro</Text>
-          <Text style={styles.infoText}>
-            Grave um vídeo de carinho para a Olívia. Ele ficará guardado com segurança e só você poderá ver —
-            até o dia em que ela fizer 10 anos, quando todos esses momentos serão revelados para ela.
-          </Text>
-          <Text style={styles.infoHint}>Você pode gravar quantos vídeos quiser 🌸</Text>
+        <View style={styles.content}>
+          <CapsuleCard />
+          <RecordMessageButton onPress={handleRecordPress} />
+
+          <YourVideosHeader count={videoCount} />
+
+          {isError ? (
+            <EmptyState emoji="😔" title="Erro ao carregar" subtitle={(error as Error).message} />
+          ) : !videoCount ? (
+            <VideoEmptyState />
+          ) : (
+            videos!.map((video, index) => (
+              <VideoHistoryCard key={video.id} video={video} index={index} />
+            ))
+          )}
         </View>
-
-        {needsPermission ? (
-          <View style={styles.permissionCard}>
-            <Text style={styles.permissionText}>Precisamos da câmera e do microfone para gravar</Text>
-            <Button label="Permitir acesso" onPress={async () => { await requestCam(); await requestMic(); }} />
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.recordCta} onPress={startRecording} activeOpacity={0.85}>
-            <View style={styles.recordCtaIcon}>
-              <Ionicons name="videocam" size={28} color={colors.white} />
-            </View>
-            <View style={styles.recordCtaText}>
-              <Text style={styles.recordCtaTitle}>Gravar mensagem</Text>
-              <Text style={styles.recordCtaSub}>Você escolhe se envia depois</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color={colors.sage} />
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.historyHeader}>
-          <Text style={styles.historyTitle}>Seus vídeos</Text>
-          <Text style={styles.historyCount}>{videos?.length ?? 0}</Text>
-        </View>
-
-        {isError ? (
-          <EmptyState emoji="😔" title="Erro ao carregar" subtitle={(error as Error).message} />
-        ) : !videos?.length ? (
-          <EmptyState
-            emoji="🧚"
-            title="Nenhum vídeo ainda"
-            subtitle="Sua primeira mensagem para a Olívia começa aqui"
-          />
-        ) : (
-          videos.map((video, index) => (
-            <View
-              key={video.id}
-              style={[
-                styles.historyCard,
-                index % 2 === 0 ? styles.historyCardEven : styles.historyCardOdd,
-              ]}
-            >
-              <View style={styles.historyCardTop}>
-                <View style={styles.historyBadge}>
-                  <Ionicons name="lock-closed" size={12} color={colors.lavender} />
-                  <Text style={styles.historyBadgeText}>Privado</Text>
-                </View>
-                <Text style={styles.historyDate}>{formatDate(video.created_at)}</Text>
-              </View>
-              {video.message ? (
-                <Text style={styles.historyMessage}>"{video.message}"</Text>
-              ) : (
-                <Text style={styles.historyMessageEmpty}>Mensagem sem texto</Text>
-              )}
-            </View>
-          ))
-        )}
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.md, paddingBottom: spacing.xxl },
-  infoCard: {
-    backgroundColor: colors.lavenderLight,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.md,
-    borderBottomLeftRadius: radius.md,
-    borderBottomRightRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    ...shadows.soft,
+  scroll: {
+    paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
-  infoEmoji: { fontSize: 32, marginBottom: spacing.sm },
-  infoTitle: { fontSize: fontSize.lg, fontWeight: '600', color: colors.olive, marginBottom: spacing.sm },
-  infoText: { fontSize: fontSize.md, color: colors.text, lineHeight: 24 },
-  infoHint: { fontSize: fontSize.sm, color: colors.sageDark, marginTop: spacing.md, fontStyle: 'italic' },
-  permissionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    alignItems: 'center',
-    gap: spacing.md,
-    ...shadows.soft,
+  content: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
   },
-  permissionText: { color: colors.textSecondary, textAlign: 'center', fontSize: fontSize.md },
-  recordCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.xl,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.xl,
-    gap: spacing.md,
-    ...shadows.card,
-  },
-  recordCtaIcon: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: colors.sageDark,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  recordCtaTitle: { fontSize: fontSize.lg, fontWeight: '600', color: colors.olive },
-  recordCtaSub: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
-  recordCtaText: { flex: 1 },
-  historyHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: spacing.md, paddingHorizontal: spacing.xs,
-  },
-  historyTitle: { fontSize: fontSize.lg, fontWeight: '600', color: colors.olive },
-  historyCount: {
-    backgroundColor: colors.pinkSoft, color: colors.sageDark,
-    fontSize: fontSize.xs, fontWeight: '700',
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full,
-  },
-  historyCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    ...shadows.soft,
-  },
-  historyCardEven: {
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.sm,
-    borderBottomLeftRadius: radius.sm,
-    borderBottomRightRadius: radius.xl,
-  },
-  historyCardOdd: {
-    borderTopLeftRadius: radius.sm,
-    borderTopRightRadius: radius.xl,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.sm,
-    marginLeft: spacing.sm,
-  },
-  historyCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
-  historyBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: colors.lavenderLight, paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: radius.full,
-  },
-  historyBadgeText: { fontSize: fontSize.xs, color: colors.lavender, fontWeight: '600' },
-  historyDate: { fontSize: fontSize.xs, color: colors.textMuted },
-  historyMessage: { fontSize: fontSize.md, color: colors.text, fontStyle: 'italic', lineHeight: 22 },
-  historyMessageEmpty: { fontSize: fontSize.sm, color: colors.textMuted },
   recordingRoot: { flex: 1, backgroundColor: '#000' },
   camera: { flex: 1 },
-  recordingOverlay: { flex: 1, justifyContent: 'space-between', padding: spacing.lg, paddingTop: 56 },
+  recordingOverlay: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+    paddingTop: 56,
+  },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center',
   },
   controls: { alignItems: 'center', gap: spacing.sm, paddingBottom: 80 },
-  timer: { color: '#ff8fab', fontSize: fontSize.xxl, fontWeight: '700' },
+  timer: { color: colors.lavender, fontSize: 28, fontFamily: typography.bodyBold.fontFamily },
   recordBtn: {
     width: 76, height: 76, borderRadius: 38, borderWidth: 4,
     borderColor: colors.white, alignItems: 'center', justifyContent: 'center',
   },
-  recordBtnActive: { borderColor: '#ff8fab' },
-  recordInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: '#ff8fab' },
+  recordBtnActive: { borderColor: colors.lavender },
+  recordInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: colors.lavender },
   recordInnerStop: { width: 28, height: 28, borderRadius: 6 },
-  hint: { color: 'rgba(255,255,255,0.85)', fontSize: fontSize.sm },
-  previewContent: { padding: spacing.md, paddingBottom: spacing.xxl },
-  previewVideoWrap: { borderRadius: radius.xl, overflow: 'hidden', marginBottom: spacing.lg, ...shadows.card },
+  hint: { ...typography.bodySmall, color: 'rgba(255,255,255,0.85)' },
+  previewContent: { paddingBottom: spacing.xxl },
+  previewVideoWrap: {
+    marginHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    marginBottom: spacing.lg,
+    ...shadows.card,
+  },
   previewVideo: { width: '100%', height: 320, backgroundColor: '#000' },
   retakeFloating: {
     position: 'absolute', bottom: spacing.md, right: spacing.md,
@@ -365,13 +287,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 12, paddingVertical: 8,
     borderRadius: radius.full,
   },
-  retakeFloatingText: { color: colors.white, fontSize: fontSize.xs, fontWeight: '600' },
-  previewLabel: { fontSize: fontSize.sm, fontWeight: '600', color: colors.olive, marginBottom: spacing.sm },
+  retakeFloatingText: { ...typography.caption, fontFamily: typography.bodyBold.fontFamily, color: colors.white },
+  previewLabel: { ...typography.fieldLabel, marginHorizontal: spacing.lg, marginBottom: spacing.sm },
   messageInput: {
-    backgroundColor: colors.surface, borderRadius: radius.lg,
-    padding: spacing.md, fontSize: fontSize.md, color: colors.text,
-    minHeight: 100, textAlignVertical: 'top', marginBottom: spacing.lg,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginHorizontal: spacing.lg,
+    ...typography.captionInput,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: spacing.lg,
     ...shadows.soft,
   },
-  previewActions: { gap: spacing.sm },
+  previewActions: { paddingHorizontal: spacing.lg, gap: spacing.sm },
 });

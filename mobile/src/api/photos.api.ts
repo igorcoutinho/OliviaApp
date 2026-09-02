@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { createFormDataWithFile } from './formData';
 import type { PhotoFeedItem } from '../types';
 
 export interface PhotoUploadParams {
@@ -8,25 +9,25 @@ export interface PhotoUploadParams {
   fileName?: string | null;
 }
 
-function buildPhotoFormData({ uri, caption, mimeType, fileName }: PhotoUploadParams) {
-  const formData = new FormData();
-  formData.append('caption', caption);
-  formData.append('photo', {
-    uri,
-    type: mimeType || 'image/jpeg',
-    name: fileName || `photo-${Date.now()}.jpg`,
-  } as unknown as Blob);
-  return formData;
-}
-
 export const photosApi = {
   getFeed: () => apiClient<PhotoFeedItem[]>('/api/photos/feed'),
 
-  upload: (params: PhotoUploadParams) =>
-    apiClient<{ message: string }>('/api/photos', {
+  upload: async (params: PhotoUploadParams) => {
+    const formData = await createFormDataWithFile(
+      { caption: params.caption },
+      'photo',
+      {
+        uri: params.uri,
+        mimeType: params.mimeType || 'image/jpeg',
+        fileName: params.fileName || `photo-${Date.now()}.jpg`,
+      },
+    );
+
+    return apiClient<{ message: string }>('/api/photos', {
       method: 'POST',
-      data: buildPhotoFormData(params),
-    }),
+      data: formData,
+    });
+  },
 
   react: (photoId: string, emoji: string) =>
     apiClient(`/api/photos/${photoId}/react`, {

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize, radius } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
 
 interface Props {
   title: string;
@@ -18,18 +18,12 @@ export function PageHeader({ title, subtitle }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', paddingVertical: spacing.lg, paddingHorizontal: spacing.md },
+  container: { alignItems: 'center', paddingVertical: spacing.lg, paddingHorizontal: spacing.screen },
   accent: {
-    width: 48, height: 4, borderRadius: radius.full,
-    backgroundColor: colors.lavender, marginBottom: spacing.md, opacity: 0.6,
+    width: 48, height: 4, borderRadius: 100,
+    backgroundColor: colors.lilacLight, marginBottom: spacing.md,
   },
-  decor: { fontSize: fontSize.sm, letterSpacing: 6, color: colors.lavender, marginBottom: spacing.xs },
-  title: {
-    fontSize: fontSize.xxl, fontWeight: '300', color: colors.olive,
-    fontStyle: 'italic', letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: fontSize.xs, color: colors.textSecondary,
-    letterSpacing: 1.5, marginTop: spacing.sm, textAlign: 'center', lineHeight: 18,
-  },
+  decor: { ...typography.caption, letterSpacing: 6, marginBottom: spacing.xs },
+  title: { ...typography.h1, textAlign: 'center' },
+  subtitle: { ...typography.subtitle, marginTop: spacing.sm, textAlign: 'center' },
 });

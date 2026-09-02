@@ -38,6 +38,7 @@ export function useUploadPhotoMutation() {
     onSuccess: (data) => {
       showSuccess(data.message || 'Foto publicada no jardim! 🌸');
       qc.invalidateQueries({ queryKey: queryKeys.feed });
+      qc.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (e: Error) => showError(e.message),
   });

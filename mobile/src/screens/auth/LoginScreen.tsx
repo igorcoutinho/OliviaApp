@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import {
-  View, Text, StyleSheet, Image, ScrollView, KeyboardAvoidingView, Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Screen, Button, Input } from '../../components/ui';
-import { PageHeader } from '../../components/layout/PageHeader';
+import {
+  AuthTextField,
+  AuthGradientButton,
+  AuthHeader,
+  AuthScreenLayout,
+} from '../../components/auth';
 import { useLoginMutation } from '../../hooks/useAuthMutations';
-import { colors, spacing, fontSize, radius, shadows } from '../../theme';
+import { spacing, typography } from '../../theme';
 import type { AuthStackParamList } from '../../types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -14,63 +16,92 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export function LoginScreen({ navigation }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
   const login = useLoginMutation();
 
+  const canSubmit = username.trim().length > 0 && password.length > 0;
+
   const handleLogin = () => {
-    if (!username.trim() || !password) return;
+    if (!canSubmit) return;
     login.mutate({ username: username.trim(), password });
   };
 
+  const handleForgotPassword = () => {
+    Alert.alert(
+      'Esqueceu a senha?',
+      'Por enquanto, peça ajuda a quem organizou a festa para recuperar seu acesso.',
+    );
+  };
+
   return (
-    <Screen>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Image source={require('../../../assets/olivia.png')} style={styles.avatar} />
-          <PageHeader title="Olívia" subtitle="Jardim da Olívia · 1 ano" />
+    <AuthScreenLayout>
+      <AuthHeader
+        title="Jardim da Olívia"
+        subtitle="Entrar no Jardim"
+        note="Entre com seus dados para participar da festa"
+      />
 
-          <View style={styles.card}>
-            <Text style={styles.cardText}>
-              Entre com seu nome de usuário e senha para participar da festa.
-            </Text>
-          </View>
+      <View style={styles.form}>
+        <AuthTextField
+          label="Nome de usuário"
+          icon="user"
+          placeholder="Ex: tia_regina"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
 
-          <Input
-            placeholder="Nome de usuário"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Input
-            placeholder="Senha"
+        <View style={styles.passwordGroup}>
+          <AuthTextField
+            label="Senha"
+            icon="lock"
+            placeholder="Digite sua senha"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!senhaVisivel}
+            secureToggle
+            secureVisible={senhaVisivel}
+            onToggleSecure={() => setSenhaVisivel((v) => !v)}
           />
+          <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotWrap}>
+            <Text style={typography.authForgotLink}>Esqueceu a senha?</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-          <Button label="Entrar" onPress={handleLogin} loading={login.isPending} />
+      <AuthGradientButton
+        label="Entrar no Jardim"
+        onPress={handleLogin}
+        loading={login.isPending}
+        disabled={!canSubmit}
+      />
 
-          <Button
-            label="Criar conta"
-            variant="ghost"
-            onPress={() => navigation.navigate('Register')}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Screen>
+      <Text style={styles.footer}>
+        <Text style={typography.authFooter}>Ainda não tem conta? </Text>
+        <Text
+          style={typography.authFooterLink}
+          onPress={() => navigation.navigate('Register')}
+        >
+          Criar conta
+        </Text>
+      </Text>
+    </AuthScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { flexGrow: 1, padding: spacing.lg, justifyContent: 'center' },
-  avatar: {
-    width: 100, height: 100, borderRadius: 50, alignSelf: 'center',
-    marginBottom: spacing.sm, borderWidth: 3, borderColor: colors.lavenderLight,
+  form: {
+    width: '100%',
+    gap: spacing.md,
   },
-  card: {
-    backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing.md,
-    marginBottom: spacing.lg, ...shadows.soft,
+  passwordGroup: {
+    gap: spacing.sm,
   },
-  cardText: { fontSize: fontSize.md, color: colors.text, lineHeight: 22, textAlign: 'center' },
+  forgotWrap: {
+    alignSelf: 'flex-end',
+  },
+  footer: {
+    textAlign: 'center',
+  },
 });

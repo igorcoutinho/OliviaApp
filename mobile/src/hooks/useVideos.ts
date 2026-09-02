@@ -18,6 +18,7 @@ export function useUploadVideoMutation() {
     onSuccess: (data) => {
       showSuccess(data.message || 'Vídeo guardado com carinho! 💕');
       qc.invalidateQueries({ queryKey: queryKeys.myVideos });
+      qc.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (e: Error) => showError(e.message),
   });

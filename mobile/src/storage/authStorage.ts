@@ -7,7 +7,7 @@ const USER_KEY = 'auth_user';
 /**
  * Camada de persistência segura da sessão.
  * Responsabilidade: guardar/ler/apagar token e usuário no dispositivo.
- * O envio do token nas requisições fica no interceptor do axios (api/http.ts).
+ * O envio do token nas requisições fica no cliente HTTP (api/http.ts).
  */
 export async function getToken(): Promise<string | null> {
   return SecureStore.getItemAsync(TOKEN_KEY);

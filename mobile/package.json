@@ -1,18 +1,22 @@
-{
+   {
   "name": "festa-olivia",
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/instrument-serif": "^0.4.1",
+    "@expo-google-fonts/parisienne": "^0.4.1",
     "@expo/vector-icons": "^15.0.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
     "@tanstack/react-query": "^5.66.0",
-    "axios": "^1.20.0",
     "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.18",
     "expo-camera": "~17.0.8",
+    "expo-font": "~57.0.3",
     "expo-image-picker": "~17.0.8",
+    "expo-linear-gradient": "~57.0.1",
     "expo-secure-store": "~15.0.7",
     "expo-status-bar": "~57.0.1",
     "expo-video": "~57.0.3",
@@ -27,8 +31,9 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start --port 8082",
-    "start:clear": "expo start --port 8082 --clear",
+    "kill:port": "lsof -ti:8082 | xargs kill -9 2>/dev/null || true",
+    "start": "npm run kill:port && expo start --port 8082",
+    "start:clear": "npm run kill:port && expo start --port 8082 --clear",
     "ios": "expo start --ios --port 8082",
     "open:ios": "xcrun simctl openurl booted exp://localhost:8082",
     "ios:device": "expo start --ios --port 8082",

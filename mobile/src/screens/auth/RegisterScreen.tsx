@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import {
-  View, Text, StyleSheet, Image, ScrollView, KeyboardAvoidingView, Platform,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Screen, Button, Input } from '../../components/ui';
-import { PageHeader } from '../../components/layout/PageHeader';
+import {
+  AuthTextField,
+  UsernamePreview,
+  RelationshipPicker,
+  AuthGradientButton,
+  AuthHeader,
+  AuthScreenLayout,
+} from '../../components/auth';
 import { useRegisterMutation } from '../../hooks/useAuthMutations';
-import { colors, spacing, fontSize } from '../../theme';
+import { previewUsername, type Relationship } from '../../lib/authUtils';
+import { spacing, typography } from '../../theme';
 import type { AuthStackParamList } from '../../types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
@@ -14,62 +19,85 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 export function RegisterScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
+  const [relacao, setRelacao] = useState<Relationship>('Tia / Tio');
   const register = useRegisterMutation();
 
+  const username = previewUsername(fullName);
+  const canSubmit = fullName.trim().length > 0 && password.length >= 4;
+
   const handleRegister = () => {
-    if (!fullName.trim() || !password) return;
+    if (!canSubmit) return;
     register.mutate({ fullName: fullName.trim(), password });
   };
 
   return (
-    <Screen>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Image source={require('../../../assets/olivia.png')} style={styles.avatar} />
-          <PageHeader title="Cadastro" subtitle="Junte-se ao jardim" />
+    <AuthScreenLayout>
+      <AuthHeader
+        title="Cadastro"
+        subtitle="Junte-se ao Jardim"
+        note="Crie sua conta para compartilhar momentos com a Olívia"
+      />
 
-          <View style={styles.card}>
-            <Text style={styles.cardText}>
-              Seu nome de usuário será gerado automaticamente a partir do seu nome completo.
-            </Text>
-          </View>
-
-          <Input
-            placeholder="Nome completo"
+      <View style={styles.form}>
+        <View style={styles.fieldGroup}>
+          <AuthTextField
+            label="Nome completo"
+            icon="user"
+            placeholder="Seu nome e sobrenome"
             value={fullName}
             onChangeText={setFullName}
             autoCapitalize="words"
+            autoCorrect={false}
           />
-          <Input
-            placeholder="Senha (mín. 4 caracteres)"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <UsernamePreview username={username} />
+        </View>
 
-          <Button label="Criar cadastro" onPress={handleRegister} loading={register.isPending} />
+        <RelationshipPicker value={relacao} onChange={setRelacao} />
 
-          <Button
-            label="Já tenho conta"
-            variant="ghost"
-            onPress={() => navigation.navigate('Login')}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Screen>
+        <AuthTextField
+          label="Senha"
+          icon="lock"
+          placeholder="Crie uma senha segura"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!senhaVisivel}
+          secureToggle
+          secureVisible={senhaVisivel}
+          onToggleSecure={() => setSenhaVisivel((v) => !v)}
+          hint="Mínimo 4 caracteres"
+        />
+      </View>
+
+      <AuthGradientButton
+        label="Criar minha conta"
+        onPress={handleRegister}
+        loading={register.isPending}
+        disabled={!canSubmit}
+      />
+
+      <Text style={styles.footer}>
+        <Text style={typography.authFooter}>Já tenho conta? </Text>
+        <Text
+          style={typography.authFooterLink}
+          onPress={() => navigation.navigate('Login')}
+        >
+          Entrar
+        </Text>
+      </Text>
+    </AuthScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { flexGrow: 1, padding: spacing.lg, justifyContent: 'center' },
-  avatar: {
-    width: 100, height: 100, borderRadius: 50, alignSelf: 'center',
-    marginBottom: spacing.sm, borderWidth: 3, borderColor: colors.lavenderLight,
+  form: {
+    width: '100%',
+    gap: spacing.sm + 4,
   },
-  card: {
-    backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md,
-    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
+  fieldGroup: {
+    gap: spacing.sm,
   },
-  cardText: { fontSize: fontSize.md, color: colors.text, lineHeight: 22, textAlign: 'center' },
+  footer: {
+    textAlign: 'center',
+  },
 });

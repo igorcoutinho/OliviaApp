@@ -1,39 +1,51 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Screen, Button, Input } from '../../components/ui';
-import { PageHeader } from '../../components/layout/PageHeader';
+import { Screen } from '../../components/ui';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import {
+  PhotoUploadArea,
+  PhotoSourceButtons,
+  CaptionField,
+  PublishGardenButton,
+} from '../../components/photo';
 import { useUploadPhotoMutation } from '../../hooks/usePhotos';
-import { colors, spacing, radius, fontSize, shadows } from '../../theme';
+import { colors, spacing } from '../../theme';
 
 export function UploadPhotoScreen() {
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [caption, setCaption] = useState('');
+  const [picking, setPicking] = useState(false);
   const upload = useUploadPhotoMutation();
 
   const pickPhoto = async (fromCamera: boolean) => {
-    const perm = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return;
+    setPicking(true);
+    try {
+      const perm = fromCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) return;
 
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync({
-          quality: 0.8,
-          allowsEditing: true,
-          aspect: [4, 3],
-          exif: false,
-        })
-      : await ImagePicker.launchImageLibraryAsync({
-          quality: 0.8,
-          allowsEditing: true,
-          aspect: [4, 3],
-          exif: false,
-          mediaTypes: ['images'],
-        });
+      const result = fromCamera
+        ? await ImagePicker.launchCameraAsync({
+            quality: 0.8,
+            allowsEditing: true,
+            aspect: [4, 3],
+            exif: false,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            quality: 0.8,
+            allowsEditing: true,
+            aspect: [4, 3],
+            exif: false,
+            mediaTypes: ['images'],
+          });
 
-    if (!result.canceled && result.assets[0]) {
-      setPhoto(result.assets[0]);
+      if (!result.canceled && result.assets[0]) {
+        setPhoto(result.assets[0]);
+      }
+    } finally {
+      setPicking(false);
     }
   };
 
@@ -57,63 +69,49 @@ export function UploadPhotoScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
-        <PageHeader title="Compartilhar" subtitle="Plantar um momento no jardim" />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader
+          title="Plantar um Momento"
+          subtitle="Compartilhe uma foto especial"
+        />
 
-        {photo ? (
-          <Image source={{ uri: photo.uri }} style={styles.preview} />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderEmoji}>📸</Text>
-            <Text style={styles.placeholderText}>Escolha ou tire uma foto</Text>
-          </View>
-        )}
+        <View style={styles.container}>
+          <PhotoUploadArea photoUri={photo?.uri} />
 
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.pickBtn} onPress={() => pickPhoto(true)}>
-            <Text style={styles.pickBtnText}>📷  Câmera</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.pickBtn, styles.pickBtnAlt]} onPress={() => pickPhoto(false)}>
-            <Text style={styles.pickBtnText}>🖼  Galeria</Text>
-          </TouchableOpacity>
-        </View>
+          <PhotoSourceButtons
+            onCamera={() => pickPhoto(true)}
+            onGallery={() => pickPhoto(false)}
+            loading={picking}
+          />
 
-        <Input placeholder="Legenda (opcional)" value={caption} onChangeText={setCaption} />
+          <CaptionField
+            placeholder="Deixe uma mensagem carinhosa..."
+            value={caption}
+            onChangeText={setCaption}
+          />
 
-        {photo && (
-          <Button
-            label="Publicar no Jardim da Olívia 🌸"
+          <PublishGardenButton
             onPress={handleUpload}
             loading={upload.isPending}
+            disabled={!photo}
           />
-        )}
+        </View>
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.md, paddingBottom: spacing.xxl },
-  preview: {
-    width: '100%', height: 280,
-    borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.sm,
-    borderBottomLeftRadius: radius.sm, borderBottomRightRadius: radius.xl,
-    marginBottom: spacing.md, ...shadows.card,
+  scroll: {
+    paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
-  placeholder: {
-    width: '100%', height: 280,
-    borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.sm,
-    borderBottomLeftRadius: radius.sm, borderBottomRightRadius: radius.xl,
-    backgroundColor: colors.lavenderLight, alignItems: 'center', justifyContent: 'center',
-    marginBottom: spacing.md, ...shadows.soft,
+  container: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
   },
-  placeholderEmoji: { fontSize: 48, marginBottom: spacing.sm },
-  placeholderText: { color: colors.textMuted, fontSize: fontSize.md },
-  row: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  pickBtn: {
-    flex: 1, backgroundColor: colors.sageDark, borderRadius: radius.full,
-    padding: spacing.md, alignItems: 'center', ...shadows.soft,
-  },
-  pickBtnAlt: { backgroundColor: colors.lavender },
-  pickBtnText: { color: colors.white, fontWeight: '600', fontSize: fontSize.md },
 });

@@ -1,13 +1,14 @@
-import axios, { AxiosError, isAxiosError } from 'axios';
 import { API_URL } from '../theme';
 import { getToken, clearSession } from '../storage/authStorage';
 import { ApiError } from './errors';
 
-export const http = axios.create({
-  baseURL: API_URL,
-  timeout: 60_000,
-  headers: { 'Content-Type': 'application/json' },
-});
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+type RequestOptions = {
+  method?: Method;
+  data?: unknown;
+  timeout?: number;
+};
 
 let onUnauthorized: (() => void) | null = null;
 
@@ -15,38 +16,75 @@ export function setOnUnauthorized(callback: () => void) {
   onUnauthorized = callback;
 }
 
-http.interceptors.request.use(async (config) => {
+async function parseBody(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+  return null;
+}
+
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', data, timeout = 60_000 } = options;
   const token = await getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
 
-  if (config.data instanceof FormData) {
-    delete config.headers['Content-Type'];
-  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
 
-  return config;
-});
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      method,
+      headers: {
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body:
+        data === undefined
+          ? undefined
+          : isFormData
+            ? (data as FormData)
+            : JSON.stringify(data),
+      signal: controller.signal,
+    });
 
-http.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError<{ error?: string }>) => {
-    if (error.response?.status === 401) {
+    const body = await parseBody(response);
+
+    if (response.status === 401) {
       await clearSession();
       onUnauthorized?.();
     }
 
-    if (isAxiosError(error)) {
+    if (!response.ok) {
       const message =
-        error.response?.data?.error ||
-        (error.code === 'ECONNABORTED' ? 'Tempo de conexão esgotado' : null) ||
-        (error.message === 'Network Error'
-          ? `Sem conexão com o servidor (${API_URL})`
-          : error.message);
+        (body as { error?: string } | null)?.error ||
+        `Erro na requisição (${response.status})`;
+      throw new ApiError(message, response.status);
+    }
 
-      throw new ApiError(message || 'Erro na requisição', error.response?.status);
+    return body as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new ApiError('Tempo de conexão esgotado');
+      }
+      if (error.message === 'Network request failed') {
+        throw new ApiError(`Sem conexão com o servidor (${API_URL})`);
+      }
+      throw new ApiError(error.message);
     }
 
     throw new ApiError('Erro inesperado na requisição');
+  } finally {
+    clearTimeout(timer);
   }
-);
+}
+
+export const http = {
+  get: <T>(path: string, options?: { timeout?: number }) =>
+    apiRequest<T>(path, { method: 'GET', ...options }),
+  request: <T>(config: { url: string; method?: Method; data?: unknown }) =>
+    apiRequest<T>(config.url, { method: config.method, data: config.data }),
+};

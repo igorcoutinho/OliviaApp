@@ -3,7 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { queryClient } from '../lib/queryClient';
 import { SessionProvider } from './SessionProvider';
-import { toastConfig } from '../components/ui/ToastConfig';
+import { toastConfig } from '../components/ui';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (

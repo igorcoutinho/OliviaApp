@@ -2,7 +2,18 @@ export interface User {
   id: string;
   full_name: string;
   username: string;
+  avatar_url?: string | null;
   created_at?: string;
+}
+
+export interface ProfileStats {
+  photos: number;
+  videos: number;
+}
+
+export interface ProfileResponse {
+  user: User;
+  stats: ProfileStats;
 }
 
 export interface AuthResponse {
@@ -29,6 +40,7 @@ export interface VideoItem {
 }
 
 export type AuthStackParamList = {
+  Welcome: undefined;
   Login: undefined;
   Register: undefined;
 };
