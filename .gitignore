@@ -13,9 +13,8 @@ web-build/
 # OS
 .DS_Store
 
-# backend
-backend/uploads/
-backend/data/
+# backend tem repositório próprio (OliviaBff)
+backend/
 
 # logs
 *.log
