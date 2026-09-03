@@ -3,18 +3,16 @@ import {
   View,
   FlatList,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   type ViewToken,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import type { PhotoMediaItem } from '../../types';
-import { colors, radius } from '../../theme';
+import { colors } from '../../theme';
 
-const SCREEN_W = Dimensions.get('window').width;
-const CARD_PADDING = 16 * 2;
-const ITEM_W = SCREEN_W - CARD_PADDING - 32;
+const IMAGE_HEIGHT = 390;
 
 interface Props {
   media: PhotoMediaItem[];
@@ -24,8 +22,13 @@ interface Props {
 }
 
 export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: Props) {
+  const [containerWidth, setContainerWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<FlatList>(null);
+
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    setContainerWidth(e.nativeEvent.layout.width);
+  }, []);
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -39,7 +42,7 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
   );
 
   if (media.length === 1) {
-    const item = media[0];
+    const item = media[0]!;
     if (item.type === 'video') {
       return (
         <TouchableOpacity
@@ -47,11 +50,6 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
           onPress={() => onVideoPress?.(item.url)}
           activeOpacity={0.9}
         >
-          <Image
-            source={require('../../../assets/poster.png')}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-          />
           <View style={styles.playCircle}>
             <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
           </View>
@@ -71,44 +69,49 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
   }
 
   return (
-    <View>
-      <FlatList
-        ref={listRef}
-        data={media}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(_, i) => String(i)}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-        renderItem={({ item, index }) => {
-          if (item.type === 'video') {
-            return (
-              <TouchableOpacity
-                style={styles.slide}
-                onPress={() => onVideoPress?.(item.url)}
-                activeOpacity={0.9}
-              >
-                <View style={[styles.slide, styles.videoBg]}>
+    <View onLayout={onLayout}>
+      {containerWidth > 0 && (
+        <FlatList
+          ref={listRef}
+          data={media}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(_, i) => String(i)}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+          getItemLayout={(_, index) => ({
+            length: containerWidth,
+            offset: containerWidth * index,
+            index,
+          })}
+          renderItem={({ item, index }) => {
+            if (item.type === 'video') {
+              return (
+                <TouchableOpacity
+                  style={[styles.slide, styles.videoBg, { width: containerWidth }]}
+                  onPress={() => onVideoPress?.(item.url)}
+                  activeOpacity={0.9}
+                >
                   <View style={styles.playCircle}>
                     <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
                   </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              );
+            }
+            return (
+              <Image
+                source={{ uri: item.url }}
+                style={[styles.slide, { width: containerWidth }]}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                recyclingKey={`${photoId}-${index}`}
+                transition={200}
+              />
             );
-          }
-          return (
-            <Image
-              source={{ uri: item.url }}
-              style={styles.slide}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-              recyclingKey={`${photoId}-${index}`}
-              transition={200}
-            />
-          );
-        }}
-      />
+          }}
+        />
+      )}
       <View style={styles.dots}>
         {media.map((_, i) => (
           <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
@@ -121,20 +124,15 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
 const styles = StyleSheet.create({
   singleContainer: {
     width: '100%',
-    height: 240,
-    borderRadius: radius.md,
+    height: IMAGE_HEIGHT,
     backgroundColor: colors.creamMid,
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
   slide: {
-    width: ITEM_W,
-    height: 240,
-    borderRadius: radius.md,
+    height: IMAGE_HEIGHT,
     backgroundColor: colors.creamMid,
     overflow: 'hidden',
-    marginRight: 10,
   },
   videoBg: {
     backgroundColor: '#120f1a',

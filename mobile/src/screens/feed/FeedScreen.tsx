@@ -3,11 +3,9 @@ import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'r
 import { Screen, EmptyState } from '../../components/ui';
 import {
   FeedHeader,
-  GreetingBanner,
   FeedCard,
   ReactionPickerModal,
 } from '../../components/feed';
-import { useUser } from '../../providers/UserProvider';
 import {
   useFeedQuery,
   useReactMutation,
@@ -19,7 +17,6 @@ import { colors, spacing } from '../../theme';
 import type { PhotoFeedItem } from '../../types';
 
 export function FeedScreen() {
-  const user = useUser();
   const {
     data,
     isLoading,
@@ -63,12 +60,7 @@ export function FeedScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
-        ListHeaderComponent={
-          <>
-            <FeedHeader />
-            <GreetingBanner firstName={user.full_name.split(' ')[0]} />
-          </>
-        }
+        ListHeaderComponent={<FeedHeader />}
         ListFooterComponent={
           isFetchingNextPage ? (
             <ActivityIndicator

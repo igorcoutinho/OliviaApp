@@ -1,40 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AuthTextField,
-  UsernamePreview,
   RelationshipPicker,
   AuthGradientButton,
   AuthHeader,
   AuthScreenLayout,
 } from '../../components/auth';
 import { useRegisterMutation } from '../../hooks/useAuthMutations';
-import { previewUsername, type Relationship } from '../../lib/authUtils';
-import { spacing, typography } from '../../theme';
+import {
+  previewUsername,
+  sanitizeUsername,
+  validateUsername,
+  type Relationship,
+} from '../../lib/authUtils';
+import { spacing, typography, colors, fonts } from '../../theme';
+import { Feather } from '@expo/vector-icons';
 import type { AuthStackParamList } from '../../types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameEdited, setUsernameEdited] = useState(false);
   const [password, setPassword] = useState('');
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [relacao, setRelacao] = useState<Relationship>('Tia / Tio');
   const register = useRegisterMutation();
 
-  const username = previewUsername(fullName);
-  const canSubmit = fullName.trim().length > 0 && password.length >= 4;
+  useEffect(() => {
+    if (!usernameEdited) {
+      setUsername(previewUsername(fullName));
+    }
+  }, [fullName, usernameEdited]);
+
+  const usernameError = username.length > 0 ? validateUsername(username) : null;
+  const canSubmit =
+    fullName.trim().length > 0 &&
+    password.length >= 4 &&
+    username.length >= 3 &&
+    !usernameError;
+
+  const handleUsernameChange = (raw: string) => {
+    setUsernameEdited(true);
+    setUsername(sanitizeUsername(raw));
+  };
 
   const handleRegister = () => {
     if (!canSubmit) return;
     register.mutate(
-      { fullName: fullName.trim(), password },
+      { fullName: fullName.trim(), username, password },
       {
         onSuccess: (data) => {
           Alert.alert(
             '🌸 Conta criada!',
-            `Sua conta foi criada com sucesso!\n\nSeu usuário é:\n\n@${data.user.username}\n\nGuarde esse nome — você vai precisar dele para entrar.`,
+            `Sua conta foi criada!\n\nEntre com:\n@${data.user.username}`,
             [{ text: 'Entendi, vamos lá!', style: 'default' }],
           );
         },
@@ -51,17 +73,41 @@ export function RegisterScreen({ navigation }: Props) {
       />
 
       <View style={styles.form}>
-        <View style={styles.fieldGroup}>
+        <AuthTextField
+          label="Nome"
+          icon="user"
+          placeholder="Seu primeiro nome"
+          value={fullName}
+          onChangeText={(v) => {
+            setFullName(v);
+            if (usernameEdited && v.trim() === '') setUsernameEdited(false);
+          }}
+          autoCapitalize="words"
+          autoCorrect={false}
+        />
+
+        <View style={styles.usernameGroup}>
           <AuthTextField
-            label="Nome"
-            icon="user"
-            placeholder="Seu primeiro nome"
-            value={fullName}
-            onChangeText={setFullName}
-            autoCapitalize="words"
+            label="Usuário"
+            icon="at-sign"
+            placeholder="seu.nome"
+            value={username}
+            onChangeText={handleUsernameChange}
+            autoCapitalize="none"
             autoCorrect={false}
+            hint="Letras minúsculas, números, ponto e underscore"
           />
-          <UsernamePreview username={username} />
+          {usernameError ? (
+            <View style={styles.errorRow}>
+              <Feather name="alert-circle" size={13} color={colors.error ?? '#B85C6A'} />
+              <Text style={styles.errorText}>{usernameError}</Text>
+            </View>
+          ) : username.length >= 3 ? (
+            <View style={styles.okRow}>
+              <Feather name="check-circle" size={13} color="#6aab7a" />
+              <Text style={styles.okText}>@{username} disponível para usar</Text>
+            </View>
+          ) : null}
         </View>
 
         <RelationshipPicker value={relacao} onChange={setRelacao} />
@@ -105,8 +151,30 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: spacing.sm + 4,
   },
-  fieldGroup: {
-    gap: spacing.sm,
+  usernameGroup: {
+    gap: 4,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingLeft: 4,
+  },
+  errorText: {
+    fontSize: 12,
+    fontFamily: fonts.body,
+    color: '#B85C6A',
+  },
+  okRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingLeft: 4,
+  },
+  okText: {
+    fontSize: 12,
+    fontFamily: fonts.body,
+    color: '#6aab7a',
   },
   footer: {
     textAlign: 'center',

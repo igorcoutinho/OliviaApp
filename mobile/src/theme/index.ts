@@ -103,6 +103,6 @@ export const fontSize = {
   xxl: 28,
 } as const;
 
-export const REACTIONS = ['❤️', '🥰', '😍', '👏', '🎉', '✨', '🌸', '🧚'] as const;
+export const REACTIONS = ['❤️', '🥰', '😍', '😂', '😊', '👏', '👀', '🎉', '✨', '🌸', '🧚', '🫶'] as const;
 
 export { API_URL } from '../config/env';

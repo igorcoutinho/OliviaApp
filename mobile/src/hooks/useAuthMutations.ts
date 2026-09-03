@@ -19,8 +19,8 @@ export function useLoginMutation() {
 export function useRegisterMutation() {
   const { setUser } = useSession();
   return useMutation({
-    mutationFn: ({ fullName, password }: { fullName: string; password: string }) =>
-      authApi.register(fullName, password),
+    mutationFn: ({ fullName, username, password }: { fullName: string; username: string; password: string }) =>
+      authApi.register(fullName, password, username),
     onSuccess: (data) => {
       setUser(data.user);
     },

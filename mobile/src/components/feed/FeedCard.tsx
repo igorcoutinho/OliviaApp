@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert } from 'react-native';
 import { View, Text, StyleSheet } from 'react-native';
 import type { PhotoFeedItem } from '../../types';
-import { colors, radius, spacing, shadows, typography } from '../../theme';
+import { colors, spacing, typography, shadows } from '../../theme';
 import { FeedCardAuthor } from './FeedCardAuthor';
 import { FeedCardActions } from './FeedCardActions';
 import { MediaCarousel } from './MediaCarousel';
@@ -44,22 +44,23 @@ export function FeedCard({
 
   return (
     <View style={styles.card}>
+      {/* Autor */}
       <FeedCardAuthor
         fullName={item.author.full_name}
         createdAt={item.created_at}
         avatarUrl={item.author.avatar_url}
       />
 
-      <MediaCarousel
-        media={media}
-        photoId={item.id}
-        onIndexChange={setCurrentMediaIndex}
-      />
+      {/* Imagem / Carrossel — sangra as bordas do card */}
+      <View style={styles.mediaBleed}>
+        <MediaCarousel
+          media={media}
+          photoId={item.id}
+          onIndexChange={setCurrentMediaIndex}
+        />
+      </View>
 
-      {item.caption ? (
-        <Text style={typography.postCaption}>{item.caption}</Text>
-      ) : null}
-
+      {/* Actions */}
       <FeedCardActions
         reactions={item.reactions}
         myReaction={item.myReaction}
@@ -77,16 +78,28 @@ export function FeedCard({
         }
         onDeletePress={item.isMine ? handleDelete : undefined}
       />
+
+      {/* Caption — abaixo das actions */}
+      {item.caption ? (
+        <Text style={typography.postCaption}>{item.caption}</Text>
+      ) : null}
     </View>
   );
 }
 
+const H_PAD = spacing.md;
+
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    paddingTop: 16,
+    paddingHorizontal: H_PAD,
+    paddingBottom: 16,
+    gap: 12,
+    overflow: 'hidden',
     ...shadows.soft,
+  },
+  mediaBleed: {
+    marginHorizontal: -H_PAD,
   },
 });

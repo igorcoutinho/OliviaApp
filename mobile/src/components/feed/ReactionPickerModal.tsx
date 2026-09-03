@@ -1,12 +1,15 @@
 import {
   Modal, View, Text, StyleSheet, TouchableOpacity, Pressable,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography, shadows, REACTIONS } from '../../theme';
 
-const EMOJI_ROWS = [
-  REACTIONS.slice(0, 4),
-  REACTIONS.slice(4, 8),
-] as const;
+const COLS = 4;
+const REACTION_LIST = [...REACTIONS];
+const ROWS: string[][] = [];
+for (let i = 0; i < REACTION_LIST.length; i += COLS) {
+  ROWS.push(REACTION_LIST.slice(i, i + COLS));
+}
 
 const CELL_BACKGROUNDS = [colors.reactionCellLavender, colors.reactionCellSage] as const;
 
@@ -17,30 +20,29 @@ interface Props {
 }
 
 export function ReactionPickerModal({ visible, onClose, onSelect }: Props) {
+  const insets = useSafeAreaInsets();
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.xl) }]}
+          onPress={(e) => e.stopPropagation()}
+        >
           <View style={styles.handle} />
-          <Text style={typography.reactionPickerTitle}>Escolha seu carinho</Text>
+          <Text style={typography.reactionPickerTitle}>Escolha sua reação</Text>
 
           <View style={styles.grid}>
-            {EMOJI_ROWS.map((row, rowIndex) => (
+            {ROWS.map((row, rowIndex) => (
               <View key={rowIndex} style={styles.row}>
                 {row.map((emoji, colIndex) => {
                   const bgIndex = (rowIndex + colIndex) % 2;
                   return (
                     <TouchableOpacity
                       key={emoji}
-                      style={[
-                        styles.cell,
-                        { backgroundColor: CELL_BACKGROUNDS[bgIndex] },
-                      ]}
-                      onPress={() => {
-                        onSelect(emoji);
-                        onClose();
-                      }}
+                      style={[styles.cell, { backgroundColor: CELL_BACKGROUNDS[bgIndex] }]}
+                      onPress={() => { onSelect(emoji); onClose(); }}
                       activeOpacity={0.8}
                     >
                       <Text style={styles.emoji}>{emoji}</Text>
@@ -74,7 +76,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     paddingTop: spacing.sm + 4,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
     gap: spacing.md,
     alignItems: 'center',
     ...shadows.reactionSheet,
@@ -95,9 +96,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 4,
   },
   cell: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 1,
     borderColor: colors.reactionBorder,
     alignItems: 'center',
@@ -105,6 +106,6 @@ const styles = StyleSheet.create({
     ...shadows.reactionCell,
   },
   emoji: {
-    fontSize: 28,
+    fontSize: 26,
   },
 });
