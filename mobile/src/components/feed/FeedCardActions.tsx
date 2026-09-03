@@ -15,8 +15,10 @@ interface Props {
   isMine?: boolean;
   downloading?: boolean;
   deleting?: boolean;
+  multipleImages?: boolean;
   onAdorePress: () => void;
   onDownloadPress: () => void;
+  onDownloadAllPress?: () => void;
   onDeletePress?: () => void;
 }
 
@@ -26,8 +28,10 @@ export function FeedCardActions({
   isMine,
   downloading,
   deleting,
+  multipleImages,
   onAdorePress,
   onDownloadPress,
+  onDownloadAllPress,
   onDeletePress,
 }: Props) {
   const count = reactions.length;
@@ -70,6 +74,17 @@ export function FeedCardActions({
             <Ionicons name="download-outline" size={18} color={colors.lavender} />
           )}
         </TouchableOpacity>
+
+        {multipleImages && onDownloadAllPress ? (
+          <TouchableOpacity
+            style={styles.iconBtnAll}
+            onPress={onDownloadAllPress}
+            disabled={downloading}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="albums-outline" size={16} color={colors.lavender} />
+          </TouchableOpacity>
+        ) : null}
 
         {isMine && onDeletePress ? (
           <TouchableOpacity
@@ -136,6 +151,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   iconBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(200,180,215,0.5)',
+    overflow: 'hidden',
+  },
+  iconBtnAll: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,

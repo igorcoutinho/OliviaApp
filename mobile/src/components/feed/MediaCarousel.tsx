@@ -1,0 +1,168 @@
+import { useRef, useState, useCallback } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  type ViewToken,
+} from 'react-native';
+import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
+import type { PhotoMediaItem } from '../../types';
+import { colors, radius } from '../../theme';
+
+const SCREEN_W = Dimensions.get('window').width;
+const CARD_PADDING = 16 * 2;
+const ITEM_W = SCREEN_W - CARD_PADDING - 32;
+
+interface Props {
+  media: PhotoMediaItem[];
+  photoId: string;
+  onIndexChange?: (index: number) => void;
+  onVideoPress?: (url: string) => void;
+}
+
+export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: Props) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const listRef = useRef<FlatList>(null);
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0) {
+        const idx = viewableItems[0].index ?? 0;
+        setActiveIndex(idx);
+        onIndexChange?.(idx);
+      }
+    },
+    [onIndexChange],
+  );
+
+  if (media.length === 1) {
+    const item = media[0];
+    if (item.type === 'video') {
+      return (
+        <TouchableOpacity
+          style={styles.singleContainer}
+          onPress={() => onVideoPress?.(item.url)}
+          activeOpacity={0.9}
+        >
+          <Image
+            source={require('../../../assets/poster.png')}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+          />
+          <View style={styles.playCircle}>
+            <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
+          </View>
+        </TouchableOpacity>
+      );
+    }
+    return (
+      <Image
+        source={{ uri: item.url }}
+        style={styles.singleContainer}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        recyclingKey={`${photoId}-0`}
+        transition={200}
+      />
+    );
+  }
+
+  return (
+    <View>
+      <FlatList
+        ref={listRef}
+        data={media}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(_, i) => String(i)}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+        renderItem={({ item, index }) => {
+          if (item.type === 'video') {
+            return (
+              <TouchableOpacity
+                style={styles.slide}
+                onPress={() => onVideoPress?.(item.url)}
+                activeOpacity={0.9}
+              >
+                <View style={[styles.slide, styles.videoBg]}>
+                  <View style={styles.playCircle}>
+                    <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          }
+          return (
+            <Image
+              source={{ uri: item.url }}
+              style={styles.slide}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`${photoId}-${index}`}
+              transition={200}
+            />
+          );
+        }}
+      />
+      <View style={styles.dots}>
+        {media.map((_, i) => (
+          <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  singleContainer: {
+    width: '100%',
+    height: 240,
+    borderRadius: radius.md,
+    backgroundColor: colors.creamMid,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slide: {
+    width: ITEM_W,
+    height: 240,
+    borderRadius: radius.md,
+    backgroundColor: colors.creamMid,
+    overflow: 'hidden',
+    marginRight: 10,
+  },
+  videoBg: {
+    backgroundColor: '#120f1a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: 8,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#d8c8e8',
+  },
+  dotActive: {
+    backgroundColor: colors.lavender,
+    width: 14,
+  },
+});

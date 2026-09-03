@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { useState, useCallback, useMemo } from 'react';
+import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { Screen, EmptyState } from '../../components/ui';
 import {
   FeedHeader,
@@ -16,10 +16,21 @@ import {
   useSavePhotoMutation,
 } from '../../hooks/usePhotos';
 import { colors, spacing } from '../../theme';
+import type { PhotoFeedItem } from '../../types';
 
 export function FeedScreen() {
   const user = useUser();
-  const { data, isLoading, isRefetching, refetch, isError, error } = useFeedQuery();
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    refetch,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useFeedQuery();
   const react = useReactMutation();
   const removeReaction = useRemoveReactionMutation();
   const deletePhoto = useDeletePhotoMutation();
@@ -27,25 +38,45 @@ export function FeedScreen() {
   const [reactionModal, setReactionModal] = useState<string | null>(null);
   const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
 
-  if (isLoading) return <Screen loading />;
+  const items = useMemo(
+    () => data?.pages.flatMap((p) => p.items) ?? [],
+    [data],
+  );
 
-  const activePhoto = data?.find((p) => p.id === reactionModal);
+  const activePhoto = items.find((p) => p.id === reactionModal);
+
+  const onEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (isLoading) return <Screen loading />;
 
   return (
     <Screen>
       <FlatList
-        data={data ?? []}
+        data={items}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.sage} />
         }
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.4}
         ListHeaderComponent={
           <>
             <FeedHeader />
             <GreetingBanner firstName={user.full_name.split(' ')[0]} />
           </>
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator
+              size="small"
+              color={colors.lavender}
+              style={styles.loadingMore}
+            />
+          ) : null
         }
         ListEmptyComponent={
           isError ? (
@@ -54,18 +85,27 @@ export function FeedScreen() {
             <EmptyState emoji="🌷" title="Nenhuma foto ainda" subtitle="Seja o primeiro a compartilhar!" />
           )
         }
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: PhotoFeedItem }) => (
           <FeedCard
             item={item}
             downloading={savePhoto.isPending && busyPhotoId === item.id}
             deleting={deletePhoto.isPending && busyPhotoId === item.id}
             onAdorePress={() => setReactionModal(item.id)}
-            onDownloadPress={() => {
+            onDownloadPress={(url) => {
               setBusyPhotoId(item.id);
               savePhoto.mutate(
-                { url: item.url, photoId: item.id },
+                { url, photoId: item.id },
                 { onSettled: () => setBusyPhotoId(null) },
               );
+            }}
+            onDownloadAllPress={(urls) => {
+              setBusyPhotoId(item.id);
+              const downloadSequentially = async () => {
+                for (let i = 0; i < urls.length; i++) {
+                  await savePhoto.mutateAsync({ url: urls[i], photoId: `${item.id}-${i}` });
+                }
+              };
+              downloadSequentially().finally(() => setBusyPhotoId(null));
             }}
             onDeletePress={
               item.isMine
@@ -104,5 +144,8 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: spacing.md,
+  },
+  loadingMore: {
+    paddingVertical: spacing.lg,
   },
 });

@@ -54,8 +54,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
     const sessionInvalid =
       response.status === 401 ||
-      (response.status === 404 &&
-        (path === '/api/auth/me' || path === '/api/profile'));
+      (response.status === 404 && path === '/api/auth/me');
 
     if (sessionInvalid) {
       await clearSession();

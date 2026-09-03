@@ -106,10 +106,8 @@ function VideoPlayerModal({
               contentFit="contain"
             />
             {!isPlaying && (
-              <View style={styles.playOverlay}>
-                <View style={styles.playCircle}>
-                  <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
-                </View>
+              <View style={styles.playCircle}>
+                <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
               </View>
             )}
           </TouchableOpacity>
@@ -281,13 +279,10 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     width: '100%',
-    height: 200,
+    height: 360,
     backgroundColor: '#120f1a',
     borderRadius: 16,
     overflow: 'hidden',
-  },
-  playOverlay: {
-    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -298,6 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
   progressContainer: {
     gap: 8,

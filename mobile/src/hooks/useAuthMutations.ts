@@ -10,7 +10,7 @@ export function useLoginMutation() {
       authApi.login(username, password),
     onSuccess: (data) => {
       setUser(data.user);
-      showSuccess(`Bem-vinda, ${data.user.full_name.split(' ')[0]}! 🌸`);
+      showSuccess(`Olá, ${data.user.full_name.split(' ')[0]}! 🌸`);
     },
     onError: (e: Error) => showError(e.message),
   });

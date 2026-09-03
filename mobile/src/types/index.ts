@@ -22,12 +22,18 @@ export interface AuthResponse {
   message?: string;
 }
 
+export interface PhotoMediaItem {
+  type: 'image' | 'video';
+  url: string;
+}
+
 export interface PhotoFeedItem {
   id: string;
   caption: string;
   url: string;
+  media: PhotoMediaItem[];
   created_at: string;
-  author: { id?: string; full_name: string; username: string };
+  author: { id?: string; full_name: string; username: string; avatar_url?: string | null };
   isMine?: boolean;
   reactions: { emoji: string; username: string; full_name: string; user_id: string }[];
   myReaction: string | null;

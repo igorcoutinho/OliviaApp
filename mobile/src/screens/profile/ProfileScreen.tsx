@@ -13,7 +13,6 @@ import { useLogoutMutation } from '../../hooks/useAuthMutations';
 import { useSession } from '../../providers/SessionProvider';
 import { ApiError } from '../../api';
 import { colors, spacing, typography } from '../../theme';
-import { useEffect } from 'react';
 
 export function ProfileScreen() {
   const { data, isLoading, isError, error, refetch, isFetching } = useProfileQuery();
@@ -21,14 +20,6 @@ export function ProfileScreen() {
   const removeAvatar = useRemoveAvatarMutation();
   const logout = useLogoutMutation();
   const { signOut } = useSession();
-
-  useEffect(() => {
-    if (!isError || !error) return;
-    const status = error instanceof ApiError ? error.status : undefined;
-    if (status === 401 || status === 404) {
-      void signOut();
-    }
-  }, [isError, error, signOut]);
 
   const pickAvatar = async (fromCamera: boolean) => {
     const perm = fromCamera

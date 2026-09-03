@@ -35,6 +35,7 @@
       ]
     },
     "plugins": [
+      "expo-image",
       [
         "expo-build-properties",
         {

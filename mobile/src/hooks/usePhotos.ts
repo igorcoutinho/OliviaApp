@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { photosApi } from '../api';
 import type { PhotoUploadParams } from '../api/photos.api';
 import { queryKeys } from '../lib/queryClient';
@@ -6,9 +6,12 @@ import { showError, showSuccess } from '../lib/toast';
 import { savePhotoToFestaAlbum } from '../lib/savePhotoToAlbum';
 
 export function useFeedQuery() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.feed,
-    queryFn: photosApi.getFeed,
+    queryFn: ({ pageParam }) => photosApi.getFeed(pageParam as string | undefined),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    staleTime: 1000 * 60 * 2,
   });
 }
 

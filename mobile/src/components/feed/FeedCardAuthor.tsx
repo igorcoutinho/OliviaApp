@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { colors, radius, spacing, typography } from '../../theme';
 import { formatPostTime } from '../../lib/feedUtils';
 
 interface Props {
   fullName: string;
   createdAt: string;
+  avatarUrl?: string | null;
 }
 
 function getInitials(name: string): string {
@@ -15,11 +17,22 @@ function getInitials(name: string): string {
     .join('');
 }
 
-export function FeedCardAuthor({ fullName, createdAt }: Props) {
+export function FeedCardAuthor({ fullName, createdAt, avatarUrl }: Props) {
   return (
     <View style={styles.row}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{getInitials(fullName)}</Text>
+      <View style={styles.avatarWrap}>
+        {avatarUrl ? (
+          <Image
+            source={{ uri: avatarUrl }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            recyclingKey={avatarUrl}
+            transition={150}
+          />
+        ) : (
+          <Text style={styles.avatarText}>{getInitials(fullName)}</Text>
+        )}
       </View>
       <View style={styles.meta}>
         <Text style={typography.authorName}>{fullName}</Text>
@@ -37,13 +50,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  avatar: {
+  avatarWrap: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
     backgroundColor: colors.lilacLight,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   avatarText: {
     ...typography.bodyBold,
