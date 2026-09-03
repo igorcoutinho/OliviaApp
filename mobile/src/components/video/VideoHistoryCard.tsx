@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { colors, radius, spacing, typography, shadows, fonts } from '../../theme';
+import { colors, radius, spacing, fonts } from '../../theme';
 import type { VideoItem } from '../../types';
 
 interface Props {
@@ -27,6 +27,12 @@ function formatDate(d: string) {
   });
 }
 
+function formatTime(secs: number) {
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function VideoPlayerModal({
   uri,
   visible,
@@ -36,29 +42,88 @@ function VideoPlayerModal({
   visible: boolean;
   onClose: () => void;
 }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
-    if (visible) p.play();
   });
+
+  useEffect(() => {
+    if (!visible) {
+      player.pause();
+      setIsPlaying(false);
+      return;
+    }
+  }, [visible, player]);
+
+  // Atualiza o progresso enquanto o vídeo toca
+  useEffect(() => {
+    if (!visible) return;
+    const id = setInterval(() => {
+      setCurrentTime(player.currentTime ?? 0);
+      setDuration(player.duration ?? 0);
+      setIsPlaying(player.playing ?? false);
+    }, 300);
+    return () => clearInterval(id);
+  }, [visible, player]);
+
+  const togglePlay = useCallback(() => {
+    if (player.playing) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  }, [player]);
+
+  const progress = duration > 0 ? Math.min(currentTime / duration, 1) : 0;
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
-        <Pressable style={styles.modalDismiss} onPress={onClose} />
+      <View style={styles.backdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
         <View style={styles.modalCard}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Sua mensagem</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={24} color={colors.oliveDark} />
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Sua mensagem</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} hitSlop={12}>
+              <Ionicons name="close" size={14} color={colors.lavender} />
             </TouchableOpacity>
           </View>
-          <VideoView
-            style={styles.modalVideo}
-            player={player}
-            nativeControls
-            contentFit="contain"
-            fullscreenOptions={{ enable: true }}
-          />
+
+          {/* Área do vídeo */}
+          <TouchableOpacity
+            style={styles.videoContainer}
+            onPress={togglePlay}
+            activeOpacity={1}
+          >
+            <VideoView
+              style={StyleSheet.absoluteFill}
+              player={player}
+              nativeControls={false}
+              contentFit="contain"
+            />
+            {!isPlaying && (
+              <View style={styles.playOverlay}>
+                <View style={styles.playCircle}>
+                  <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
+                </View>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Progress */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
+            </View>
+            <View style={styles.timeRow}>
+              <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+              <Text style={styles.timeText}>{formatTime(duration)}</Text>
+            </View>
+          </View>
         </View>
       </View>
     </Modal>
@@ -106,10 +171,15 @@ export function VideoHistoryCard({ video, index }: Props) {
 }
 
 const styles = StyleSheet.create({
+  // ── Card da lista ──────────────────────────────────────────────────────
   card: {
     backgroundColor: colors.white,
     padding: spacing.md,
-    ...shadows.soft,
+    shadowColor: '#6A4F9E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 3,
   },
   cardEven: {
     borderTopLeftRadius: radius.lg,
@@ -134,27 +204,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.lilacLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.full,
+    backgroundColor: '#f2edf8',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
   },
   badgeText: {
-    ...typography.caption,
-    color: colors.lavender,
+    fontSize: 12,
     fontFamily: fonts.bodyBold,
+    color: colors.lavender,
   },
   date: {
-    ...typography.caption,
+    fontSize: 12,
+    color: '#8c72a8',
   },
   message: {
-    ...typography.body,
+    fontSize: 14,
     fontStyle: 'italic',
-    color: colors.oliveDark,
+    color: colors.lavender,
+    lineHeight: 20,
   },
   messageEmpty: {
-    ...typography.bodySmall,
-    color: colors.moss,
+    fontSize: 14,
+    color: colors.lavender,
   },
   watchRow: {
     flexDirection: 'row',
@@ -163,41 +235,92 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   watchText: {
-    ...typography.caption,
-    color: colors.lavender,
+    fontSize: 14,
     fontFamily: fonts.bodyBold,
+    color: colors.lavender,
   },
-  modalBackdrop: {
+
+  // ── Modal ──────────────────────────────────────────────────────────────
+  backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(40, 30, 50, 0.72)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalDismiss: {
-    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    padding: spacing.xl,
   },
   modalCard: {
     backgroundColor: colors.white,
     borderRadius: radius.lg,
-    overflow: 'hidden',
-    ...shadows.soft,
+    padding: spacing.lg,
+    gap: spacing.md,
+    width: '100%',
+    maxWidth: 350,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
   },
-  modalHeader: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
   },
-  modalTitle: {
-    ...typography.body,
-    fontFamily: fonts.bodyBold,
-    color: colors.oliveDark,
+  title: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.lavender,
   },
-  modalVideo: {
+  closeBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f2edf8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoContainer: {
     width: '100%',
-    aspectRatio: 9 / 16,
-    maxHeight: 480,
-    backgroundColor: colors.creamMid,
+    height: 200,
+    backgroundColor: '#120f1a',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  playOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressContainer: {
+    gap: 8,
+  },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#e8d5f5',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: colors.lavender,
+    minWidth: 2,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  timeText: {
+    fontSize: 12,
+    fontFamily: fonts.bodyMedium,
+    color: '#8c72a8',
   },
 });
