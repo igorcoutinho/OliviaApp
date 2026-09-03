@@ -2,12 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 function loadEnvFile(filePath) {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(
-      `Arquivo de ambiente não encontrado: ${filePath}\n` +
-        `Copie o .example correspondente em envs/ e preencha os valores.`,
-    );
-  }
+  if (!fs.existsSync(filePath)) return {};
 
   const result = {};
   for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
@@ -25,8 +20,21 @@ function loadEnvFile(filePath) {
 const APP_ENV = process.env.APP_ENV === 'prd' ? 'prd' : 'local';
 const fileEnv = loadEnvFile(path.join(__dirname, 'envs', `${APP_ENV}.env`));
 
-const apiUrl = fileEnv.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:4000';
-const appSecret = fileEnv.EXPO_PUBLIC_APP_SECRET || '';
+const apiUrl =
+  process.env.EXPO_PUBLIC_API_URL ||
+  fileEnv.EXPO_PUBLIC_API_URL ||
+  (APP_ENV === 'prd' ? 'https://api.minhasfotos.net' : 'http://127.0.0.1:4000');
+
+const appSecret =
+  process.env.EXPO_PUBLIC_APP_SECRET ||
+  fileEnv.EXPO_PUBLIC_APP_SECRET ||
+  '';
+
+if (APP_ENV === 'prd' && !appSecret) {
+  console.warn(
+    '⚠️  EXPO_PUBLIC_APP_SECRET vazio no build prd. Defina em envs/prd.env ou via EAS Secret.',
+  );
+}
 
 process.env.EXPO_PUBLIC_API_URL = apiUrl;
 process.env.EXPO_PUBLIC_APP_SECRET = appSecret;

@@ -1,5 +1,6 @@
 import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
+import { KEYBOARD_DONE_ACCESSORY_ID } from '../ui/KeyboardDoneAccessory';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -16,6 +17,7 @@ export function CaptionField({ label = 'Mensagem da Legenda', style, ...props }:
         numberOfLines={3}
         textAlignVertical="top"
         {...props}
+        inputAccessoryViewID={KEYBOARD_DONE_ACCESSORY_ID}
       />
     </View>
   );

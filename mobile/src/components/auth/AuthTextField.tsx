@@ -1,6 +1,15 @@
-import { View, Text, TextInput, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TextInputProps,
+  TouchableOpacity,
+  Keyboard,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../../theme';
+import { KEYBOARD_DONE_ACCESSORY_ID } from '../ui/KeyboardDoneAccessory';
 
 interface Props extends TextInputProps {
   label: string;
@@ -19,6 +28,10 @@ export function AuthTextField({
   secureVisible,
   onToggleSecure,
   style,
+  onSubmitEditing,
+  returnKeyType = 'done',
+  blurOnSubmit = true,
+  inputAccessoryViewID = KEYBOARD_DONE_ACCESSORY_ID,
   ...props
 }: Props) {
   return (
@@ -30,6 +43,13 @@ export function AuthTextField({
           style={[styles.input, style]}
           placeholderTextColor={colors.moss}
           {...props}
+          returnKeyType={returnKeyType}
+          blurOnSubmit={blurOnSubmit}
+          inputAccessoryViewID={inputAccessoryViewID}
+          onSubmitEditing={(event) => {
+            onSubmitEditing?.(event);
+            Keyboard.dismiss();
+          }}
         />
         {secureToggle && (
           <TouchableOpacity onPress={onToggleSecure} hitSlop={8}>

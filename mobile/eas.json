@@ -1,12 +1,48 @@
 {
-  "cli": { "version": ">= 12.0.0" },
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "local"
+      }
+    },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "env": {
+        "APP_ENV": "prd",
+        "EXPO_PUBLIC_API_URL": "https://api.minhasfotos.net"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
     },
     "production": {
-      "android": { "buildType": "apk" }
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "prd",
+        "EXPO_PUBLIC_API_URL": "https://api.minhasfotos.net"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6808076977"
+      }
     }
   }
 }

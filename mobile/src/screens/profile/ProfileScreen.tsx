@@ -96,7 +96,11 @@ export function ProfileScreen() {
         <View style={styles.errorBox}>
           <Text style={styles.errorTitle}>Não foi possível carregar o perfil</Text>
           <Text style={styles.errorText}>
-            {error instanceof Error ? error.message : 'Tente novamente'}
+            {error instanceof ApiError && error.status && error.status >= 500
+              ? 'Tivemos um problema no servidor. Tente de novo em instantes.'
+              : error instanceof Error
+                ? error.message
+                : 'Tente novamente'}
           </Text>
           <Button label="Tentar de novo" onPress={() => refetch()} />
           <Button label="Sair e entrar de novo" variant="ghost" onPress={() => signOut()} />

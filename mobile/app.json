@@ -1,21 +1,17 @@
 {
   "expo": {
     "name": "Festa da Olivia",
-    "slug": "festa-olivia",
+    "slug": "festa-da-olivia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "festa-olivia",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFF8F0"
-    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.festaolivia.app",
+      "bundleIdentifier": "com.igorcoutinho.festaolivia",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Precisamos da câmera para gravar vídeos de carinho para a Olivia.",
         "NSMicrophoneUsageDescription": "Precisamos do microfone para gravar sua mensagem de vídeo.",
         "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para enviar registros da festa."
@@ -27,7 +23,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png"
       },
-      "package": "com.festaolivia.app",
+      "package": "com.igorcoutinho.festaolivia",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -52,7 +48,21 @@
       ],
       "expo-secure-store",
       "expo-video",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF8F0"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2a018683-6cec-4601-aa11-84d5c61aeecb"
+      }
+    },
+    "owner": "igor-lds"
   }
 }

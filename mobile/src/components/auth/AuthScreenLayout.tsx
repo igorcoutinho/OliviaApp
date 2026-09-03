@@ -33,6 +33,7 @@ export function AuthScreenLayout({ children }: Props) {
             },
           ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
         >
           {children}

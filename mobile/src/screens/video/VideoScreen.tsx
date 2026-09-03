@@ -8,6 +8,7 @@ import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Button, EmptyState, GradientButton } from '../../components/ui';
+import { KEYBOARD_DONE_ACCESSORY_ID } from '../../components/ui/KeyboardDoneAccessory';
 import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import {
   CapsuleCard,
@@ -174,7 +175,11 @@ export function VideoScreen() {
   if (mode === 'preview' && recordedUri) {
     return (
       <Screen>
-        <ScrollView contentContainerStyle={styles.previewContent} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.previewContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
           <ScreenHeader title="Revisar mensagem" subtitle="Confira antes de plantar no baú" />
           <VideoPreview uri={recordedUri} onRetake={() => { setRecordedUri(null); setMode('recording'); }} />
 
@@ -187,6 +192,7 @@ export function VideoScreen() {
             onChangeText={setMessage}
             multiline
             numberOfLines={3}
+            inputAccessoryViewID={KEYBOARD_DONE_ACCESSORY_ID}
           />
 
           <View style={styles.previewActions}>
