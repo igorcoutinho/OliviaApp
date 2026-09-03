@@ -19,3 +19,7 @@ backend/
 # logs
 *.log
 npm-debug.*
+
+# Android signing (nunca commit)
+mobile/credentials.json
+mobile/credentials/

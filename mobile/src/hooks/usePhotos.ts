@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { photosApi } from '../api';
+import type { PhotoUploadParams } from '../api/photos.api';
 import { queryKeys } from '../lib/queryClient';
 import { showError, showSuccess } from '../lib/toast';
+import { savePhotoToFestaAlbum } from '../lib/savePhotoToAlbum';
 
 export function useFeedQuery() {
   return useQuery({
@@ -29,8 +31,6 @@ export function useRemoveReactionMutation() {
   });
 }
 
-import type { PhotoUploadParams } from '../api/photos.api';
-
 export function useUploadPhotoMutation() {
   const qc = useQueryClient();
   return useMutation({
@@ -39,6 +39,30 @@ export function useUploadPhotoMutation() {
       showSuccess(data.message || 'Foto publicada no jardim! 🌸');
       qc.invalidateQueries({ queryKey: queryKeys.feed });
       qc.invalidateQueries({ queryKey: queryKeys.profile });
+    },
+    onError: (e: Error) => showError(e.message),
+  });
+}
+
+export function useDeletePhotoMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (photoId: string) => photosApi.delete(photoId),
+    onSuccess: (data) => {
+      showSuccess(data.message || 'Foto removida');
+      qc.invalidateQueries({ queryKey: queryKeys.feed });
+      qc.invalidateQueries({ queryKey: queryKeys.profile });
+    },
+    onError: (e: Error) => showError(e.message),
+  });
+}
+
+export function useSavePhotoMutation() {
+  return useMutation({
+    mutationFn: ({ url, photoId }: { url: string; photoId: string }) =>
+      savePhotoToFestaAlbum(url, photoId),
+    onSuccess: (data) => {
+      showSuccess(`Salva no álbum “${data.albumName}”`);
     },
     onError: (e: Error) => showError(e.message),
   });

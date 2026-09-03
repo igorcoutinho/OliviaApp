@@ -14,7 +14,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Precisamos da câmera para gravar vídeos de carinho para a Olivia.",
         "NSMicrophoneUsageDescription": "Precisamos do microfone para gravar sua mensagem de vídeo.",
-        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para enviar registros da festa."
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para enviar registros da festa.",
+        "NSPhotoLibraryAddUsageDescription": "Precisamos salvar fotos da festa no álbum do seu aparelho."
       }
     },
     "android": {
@@ -28,7 +29,9 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_MEDIA_VIDEO"
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
@@ -44,6 +47,14 @@
         "expo-image-picker",
         {
           "photosPermission": "Precisamos acessar suas fotos para enviar registros da festa."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Precisamos salvar fotos da festa no álbum do seu aparelho.",
+          "savePhotosPermission": "Precisamos salvar fotos da festa no álbum do seu aparelho.",
+          "isAccessMediaLocationEnabled": false
         }
       ],
       "expo-secure-store",

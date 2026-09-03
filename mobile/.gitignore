@@ -43,3 +43,6 @@ envs/prd.env
 # generated native folders
 /ios
 /android
+
+credentials.json
+credentials/

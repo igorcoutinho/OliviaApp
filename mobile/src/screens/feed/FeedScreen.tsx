@@ -8,7 +8,13 @@ import {
   ReactionPickerModal,
 } from '../../components/feed';
 import { useUser } from '../../providers/UserProvider';
-import { useFeedQuery, useReactMutation, useRemoveReactionMutation } from '../../hooks/usePhotos';
+import {
+  useFeedQuery,
+  useReactMutation,
+  useRemoveReactionMutation,
+  useDeletePhotoMutation,
+  useSavePhotoMutation,
+} from '../../hooks/usePhotos';
 import { colors, spacing } from '../../theme';
 
 export function FeedScreen() {
@@ -16,7 +22,10 @@ export function FeedScreen() {
   const { data, isLoading, isRefetching, refetch, isError, error } = useFeedQuery();
   const react = useReactMutation();
   const removeReaction = useRemoveReactionMutation();
+  const deletePhoto = useDeletePhotoMutation();
+  const savePhoto = useSavePhotoMutation();
   const [reactionModal, setReactionModal] = useState<string | null>(null);
+  const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
 
   if (isLoading) return <Screen loading />;
 
@@ -48,7 +57,26 @@ export function FeedScreen() {
         renderItem={({ item }) => (
           <FeedCard
             item={item}
+            downloading={savePhoto.isPending && busyPhotoId === item.id}
+            deleting={deletePhoto.isPending && busyPhotoId === item.id}
             onAdorePress={() => setReactionModal(item.id)}
+            onDownloadPress={() => {
+              setBusyPhotoId(item.id);
+              savePhoto.mutate(
+                { url: item.url, photoId: item.id },
+                { onSettled: () => setBusyPhotoId(null) },
+              );
+            }}
+            onDeletePress={
+              item.isMine
+                ? () => {
+                    setBusyPhotoId(item.id);
+                    deletePhoto.mutate(item.id, {
+                      onSettled: () => setBusyPhotoId(null),
+                    });
+                  }
+                : undefined
+            }
           />
         )}
       />

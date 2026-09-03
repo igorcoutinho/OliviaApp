@@ -37,4 +37,7 @@ export const photosApi = {
 
   removeReaction: (photoId: string) =>
     apiClient(`/api/photos/${photoId}/react`, { method: 'DELETE' }),
+
+  delete: (photoId: string) =>
+    apiClient<{ message: string }>(`/api/photos/${photoId}`, { method: 'DELETE' }),
 };

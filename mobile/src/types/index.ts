@@ -27,7 +27,8 @@ export interface PhotoFeedItem {
   caption: string;
   url: string;
   created_at: string;
-  author: { full_name: string; username: string };
+  author: { id?: string; full_name: string; username: string };
+  isMine?: boolean;
   reactions: { emoji: string; username: string; full_name: string; user_id: string }[];
   myReaction: string | null;
 }

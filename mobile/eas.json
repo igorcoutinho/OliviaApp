@@ -13,6 +13,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "credentialsSource": "local",
       "env": {
         "APP_ENV": "prd",
         "EXPO_PUBLIC_API_URL": "https://api.minhasfotos.net"
