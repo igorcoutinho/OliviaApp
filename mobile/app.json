@@ -36,6 +36,17 @@
     },
     "plugins": [
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraMavenRepos": [
+              "https://maven.google.com",
+              "https://repo1.maven.org/maven2"
+            ]
+          }
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "Precisamos da câmera para gravar vídeos de carinho para a Olivia.",
