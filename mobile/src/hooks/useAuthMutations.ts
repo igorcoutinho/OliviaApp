@@ -32,9 +32,10 @@ export function useRegisterMutation() {
 export function useLogoutMutation() {
   const { signOut } = useSession();
   return useMutation({
-    mutationFn: () => authApi.logout(),
-    onSuccess: async () => {
+    mutationFn: async () => {
       await signOut();
+    },
+    onSuccess: () => {
       showSuccess('Até logo! 🌸');
     },
     onError: (e: Error) => showError(e.message),

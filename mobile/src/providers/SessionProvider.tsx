@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { getStoredUser } from '../storage/authStorage';
+import { getStoredUser, getToken, saveSession, clearSession } from '../storage/authStorage';
 import { authApi, setOnUnauthorized } from '../api';
+import { queryClient } from '../lib/queryClient';
 import type { User } from '../types';
 
 interface SessionContextValue {
@@ -17,17 +18,47 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    getStoredUser()
-      .then(setUser)
-      .finally(() => setIsLoading(false));
-
-    setOnUnauthorized(() => setUser(null));
+  const signOut = useCallback(async () => {
+    await clearSession();
+    queryClient.clear();
+    setUser(null);
   }, []);
 
-  const signOut = useCallback(async () => {
-    await authApi.logout();
-    setUser(null);
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      queryClient.clear();
+      setUser(null);
+    });
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const stored = await getStoredUser();
+        const token = await getToken();
+
+        if (!stored || !token) {
+          if (!cancelled) setUser(null);
+          return;
+        }
+
+        const me = await authApi.me();
+        if (cancelled) return;
+
+        await saveSession(token, me);
+        setUser(me);
+      } catch {
+        await clearSession();
+        queryClient.clear();
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

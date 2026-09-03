@@ -1,5 +1,6 @@
 import { API_URL } from '../theme';
 import { getToken, clearSession } from '../storage/authStorage';
+import { appSignatureHeaders } from '../lib/appSignature';
 import { ApiError } from './errors';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -38,6 +39,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       headers: {
         ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(await appSignatureHeaders(method, path)),
       },
       body:
         data === undefined
@@ -50,7 +52,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
     const body = await parseBody(response);
 
-    if (response.status === 401) {
+    const sessionInvalid =
+      response.status === 401 ||
+      (response.status === 404 &&
+        (path === '/api/auth/me' || path === '/api/profile'));
+
+    if (sessionInvalid) {
       await clearSession();
       onUnauthorized?.();
     }

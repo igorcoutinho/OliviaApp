@@ -1,4 +1,4 @@
-   {
+{
   "name": "festa-olivia",
   "version": "1.0.0",
   "main": "index.ts",
@@ -14,12 +14,14 @@
     "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.18",
     "expo-camera": "~17.0.8",
+    "expo-constants": "~57.0.17",
     "expo-font": "~57.0.3",
     "expo-image-picker": "~17.0.8",
     "expo-linear-gradient": "~57.0.1",
     "expo-secure-store": "~15.0.7",
     "expo-status-bar": "~57.0.1",
     "expo-video": "~57.0.3",
+    "js-sha256": "^1.0.0",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.6.0",
@@ -32,13 +34,15 @@
   },
   "scripts": {
     "kill:port": "lsof -ti:8082 | xargs kill -9 2>/dev/null || true",
-    "start": "npm run kill:port && expo start --port 8082",
-    "start:clear": "npm run kill:port && expo start --port 8082 --clear",
-    "ios": "expo start --ios --port 8082",
+    "start": "npm run start:local",
+    "start:local": "npm run kill:port && APP_ENV=local expo start --port 8082 --clear",
+    "start:prd": "npm run kill:port && APP_ENV=prd expo start --port 8082 --clear",
+    "start:clear": "npm run start:local",
+    "ios": "APP_ENV=local expo start --ios --port 8082",
     "open:ios": "xcrun simctl openurl booted exp://localhost:8082",
-    "ios:device": "expo start --ios --port 8082",
-    "android": "expo start --android --port 8082",
-    "web": "expo start --web --port 8082",
+    "ios:device": "APP_ENV=local expo start --ios --port 8082",
+    "android": "APP_ENV=local expo start --android --port 8082",
+    "web": "APP_ENV=local expo start --web --port 8082",
     "fix": "expo install --fix"
   },
   "private": true

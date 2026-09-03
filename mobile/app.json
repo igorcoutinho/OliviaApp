@@ -53,10 +53,6 @@
       "expo-secure-store",
       "expo-video",
       "expo-font"
-    ],
-    "extra": {
-      "apiUrl": "http://SEU_IP_LOCAL:4000",
-      "inviteCode": "festa-olivia-2025"
-    }
+    ]
   }
 }

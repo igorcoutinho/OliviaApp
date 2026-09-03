@@ -12,6 +12,8 @@ export function previewUsername(fullName: string): string {
 }
 
 export const RELATIONSHIP_OPTIONS = [
+  'Pai',
+  'Mãe',
   'Tia / Tio',
   'Primo / Prima',
   'Avó / Avô',

@@ -1,6 +1,6 @@
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Screen } from '../../components/ui';
+import { Screen, Button } from '../../components/ui';
 import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import {
   ProfileCard,
@@ -10,13 +10,25 @@ import {
 } from '../../components/profile';
 import { useProfileQuery, useUploadAvatarMutation, useRemoveAvatarMutation } from '../../hooks/useProfile';
 import { useLogoutMutation } from '../../hooks/useAuthMutations';
-import { colors, spacing } from '../../theme';
+import { useSession } from '../../providers/SessionProvider';
+import { ApiError } from '../../api';
+import { colors, spacing, typography } from '../../theme';
+import { useEffect } from 'react';
 
 export function ProfileScreen() {
-  const { data, isLoading } = useProfileQuery();
+  const { data, isLoading, isError, error, refetch, isFetching } = useProfileQuery();
   const uploadAvatar = useUploadAvatarMutation();
   const removeAvatar = useRemoveAvatarMutation();
   const logout = useLogoutMutation();
+  const { signOut } = useSession();
+
+  useEffect(() => {
+    if (!isError || !error) return;
+    const status = error instanceof ApiError ? error.status : undefined;
+    if (status === 401 || status === 404) {
+      void signOut();
+    }
+  }, [isError, error, signOut]);
 
   const pickAvatar = async (fromCamera: boolean) => {
     const perm = fromCamera
@@ -69,8 +81,28 @@ export function ProfileScreen() {
     Alert.alert('Foto de perfil', 'Como você quer atualizar sua foto?', options);
   };
 
-  if (isLoading || !data) {
+  if (isLoading || (isFetching && !data)) {
     return <Screen loading loadingMessage="Carregando seu perfil..." />;
+  }
+
+  if (isError || !data) {
+    const status = error instanceof ApiError ? error.status : undefined;
+    if (status === 401 || status === 404) {
+      return <Screen loading loadingMessage="Sessão expirada..." />;
+    }
+
+    return (
+      <Screen>
+        <View style={styles.errorBox}>
+          <Text style={styles.errorTitle}>Não foi possível carregar o perfil</Text>
+          <Text style={styles.errorText}>
+            {error instanceof Error ? error.message : 'Tente novamente'}
+          </Text>
+          <Button label="Tentar de novo" onPress={() => refetch()} />
+          <Button label="Sair e entrar de novo" variant="ghost" onPress={() => signOut()} />
+        </View>
+      </Screen>
+    );
   }
 
   const { user, stats } = data;
@@ -117,5 +149,22 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
+  },
+  errorBox: {
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    gap: spacing.md,
+  },
+  errorTitle: {
+    ...typography.authTitle,
+    fontSize: 22,
+    color: colors.sageDark,
+    textAlign: 'center',
+  },
+  errorText: {
+    ...typography.body,
+    color: colors.moss,
+    textAlign: 'center',
   },
 });
