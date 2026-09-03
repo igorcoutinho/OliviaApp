@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography, shadows } from '../../theme';
+import { colors, radius, spacing, typography } from '../../theme';
 import { formatReactionCount, getUniqueReactionEmojis } from '../../lib/feedUtils';
 
 interface Reaction {
@@ -34,34 +35,31 @@ export function FeedCardActions({
   const countLabel = formatReactionCount(count);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.row}>
-        <TouchableOpacity
-          style={[styles.reactBtn, myReaction && styles.reactBtnActive]}
-          onPress={onAdorePress}
-          activeOpacity={0.75}
-        >
-          {myReaction ? (
-            <View style={styles.reactBtnContent}>
-              <Text style={styles.reactEmoji}>{myReaction}</Text>
-              <Text style={typography.reactedLabel}>Adorei</Text>
-            </View>
-          ) : (
-            <Text style={typography.adoreButton}>Reagir</Text>
-          )}
+    <View style={styles.row}>
+      <View style={styles.leftActions}>
+        <TouchableOpacity onPress={onAdorePress} activeOpacity={0.75} style={styles.adoreShadow}>
+          <LinearGradient
+            colors={['#f5f0fa', '#f0edf8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.adoreBtn}
+          >
+            {myReaction ? (
+              <>
+                <Text style={styles.reactEmoji}>{myReaction}</Text>
+                <Text style={typography.reactedLabel}>Adorei</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.flowerIcon}>🌸</Text>
+                <Text style={typography.adoreButton}>Adorar</Text>
+              </>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
 
-        {count > 0 && (
-          <View style={styles.summary}>
-            {emojis ? <Text style={styles.emojis}>{emojis}</Text> : null}
-            <Text style={typography.reactionSummaryCount}>{countLabel}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.tools}>
         <TouchableOpacity
-          style={styles.toolBtn}
+          style={styles.iconBtn}
           onPress={onDownloadPress}
           disabled={downloading}
           activeOpacity={0.75}
@@ -71,12 +69,11 @@ export function FeedCardActions({
           ) : (
             <Ionicons name="download-outline" size={18} color={colors.lavender} />
           )}
-          <Text style={styles.toolLabel}>{downloading ? 'Salvando…' : 'Salvar no álbum'}</Text>
         </TouchableOpacity>
 
         {isMine && onDeletePress ? (
           <TouchableOpacity
-            style={styles.toolBtnDanger}
+            style={styles.iconBtnDanger}
             onPress={onDeletePress}
             disabled={deleting}
             activeOpacity={0.75}
@@ -86,89 +83,86 @@ export function FeedCardActions({
             ) : (
               <Ionicons name="trash-outline" size={18} color="#B85C6A" />
             )}
-            <Text style={styles.toolLabelDanger}>{deleting ? 'Excluindo…' : 'Excluir'}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
+
+      {count > 0 ? (
+        <View style={styles.summary}>
+          {emojis ? <Text style={styles.emojis}>{emojis}</Text> : null}
+          <Text style={typography.reactionSummaryCount}>{countLabel}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    gap: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.reactionBorder,
-    paddingTop: spacing.sm + 4,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.reactionBorder,
+    paddingTop: spacing.sm + 4,
   },
-  reactBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.cream,
-    borderWidth: 1,
-    borderColor: colors.reactionBorder,
-  },
-  reactBtnActive: {
-    backgroundColor: colors.reactionCellLavender,
-    paddingHorizontal: 14,
-    paddingVertical: spacing.sm,
-    ...shadows.reactedButton,
-  },
-  reactBtnContent: {
+  leftActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 8,
+  },
+  adoreShadow: {
+    borderRadius: radius.pill,
+    shadowColor: 'rgba(112,128,99,0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  adoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+  },
+  flowerIcon: {
+    fontSize: 16,
+    lineHeight: 18,
   },
   reactEmoji: {
     fontSize: 16,
+    lineHeight: 18,
+  },
+  iconBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(200,180,215,0.5)',
+    overflow: 'hidden',
+  },
+  iconBtnDanger: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(184,92,106,0.3)',
+    overflow: 'hidden',
   },
   summary: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     flexShrink: 1,
   },
   emojis: {
     fontSize: 14,
     letterSpacing: 1,
-  },
-  tools: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
-  },
-  toolBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-    backgroundColor: colors.lilacLight,
-  },
-  toolBtnDanger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-    backgroundColor: '#F8E8EB',
-  },
-  toolLabel: {
-    ...typography.caption,
-    color: colors.lavender,
-  },
-  toolLabelDanger: {
-    ...typography.caption,
-    color: '#B85C6A',
   },
 });

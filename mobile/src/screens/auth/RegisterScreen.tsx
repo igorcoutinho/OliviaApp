@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AuthTextField,
@@ -28,7 +28,18 @@ export function RegisterScreen({ navigation }: Props) {
 
   const handleRegister = () => {
     if (!canSubmit) return;
-    register.mutate({ fullName: fullName.trim(), password });
+    register.mutate(
+      { fullName: fullName.trim(), password },
+      {
+        onSuccess: (data) => {
+          Alert.alert(
+            '🌸 Conta criada!',
+            `Sua conta foi criada com sucesso!\n\nSeu usuário é:\n\n@${data.user.username}\n\nGuarde esse nome — você vai precisar dele para entrar.`,
+            [{ text: 'Entendi, vamos lá!', style: 'default' }],
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -42,9 +53,9 @@ export function RegisterScreen({ navigation }: Props) {
       <View style={styles.form}>
         <View style={styles.fieldGroup}>
           <AuthTextField
-            label="Nome completo"
+            label="Nome"
             icon="user"
-            placeholder="Seu nome e sobrenome"
+            placeholder="Seu primeiro nome"
             value={fullName}
             onChangeText={setFullName}
             autoCapitalize="words"

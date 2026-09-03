@@ -25,6 +25,17 @@
         "simulator": false
       }
     },
+    "internal": {
+      "autoIncrement": true,
+      "credentialsSource": "local",
+      "env": {
+        "APP_ENV": "prd",
+        "EXPO_PUBLIC_API_URL": "https://api.minhasfotos.net"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {
@@ -43,6 +54,12 @@
     "production": {
       "ios": {
         "ascAppId": "6808076977"
+      }
+    },
+    "internal": {
+      "android": {
+        "applicationId": "com.festadaolivia.app",
+        "track": "internal"
       }
     }
   }

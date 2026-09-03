@@ -1,5 +1,5 @@
 import { File, Paths } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library/legacy';
 
 export const FESTA_ALBUM_NAME = 'Festa da Olivia';
 

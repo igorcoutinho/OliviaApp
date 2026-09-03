@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '../api';
 import { useSession } from '../providers/SessionProvider';
-import { showError, showSuccess, showInfo } from '../lib/toast';
+import { showError, showSuccess } from '../lib/toast';
 
 export function useLoginMutation() {
   const { setUser } = useSession();
@@ -23,7 +23,6 @@ export function useRegisterMutation() {
       authApi.register(fullName, password),
     onSuccess: (data) => {
       setUser(data.user);
-      showInfo(`Seu usuário: @${data.user.username} — guarde para entrar depois!`);
     },
     onError: (e: Error) => showError(e.message),
   });
