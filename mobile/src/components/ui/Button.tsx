@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   },
   primary: { backgroundColor: colors.sageDark, ...shadows.soft },
   secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.sage },
-  ghost: { backgroundColor: 'transparent' },
+  ghost: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.lilacLight },
   disabled: { opacity: 0.6 },
   text: { ...typography.bodyBold, fontSize: fontSize.lg },
   textPrimary: { color: colors.white },

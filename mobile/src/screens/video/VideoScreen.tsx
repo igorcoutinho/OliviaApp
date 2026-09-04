@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, RefreshControl, Alert,
+  FlatList, RefreshControl, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
@@ -19,6 +19,7 @@ import {
 } from '../../components/video';
 import { useMyVideosQuery, useUploadVideoMutation } from '../../hooks/useVideos';
 import { colors, spacing, radius, shadows, typography } from '../../theme';
+import type { VideoItem } from '../../types';
 
 type Mode = 'home' | 'recording' | 'preview';
 
@@ -175,10 +176,9 @@ export function VideoScreen() {
   if (mode === 'preview' && recordedUri) {
     return (
       <Screen>
-        <ScrollView
-          contentContainerStyle={styles.previewContent}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
+        <KeyboardAvoidingView
+          style={styles.body}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScreenHeader title="Revisar mensagem" subtitle="Confira antes de plantar no baú" />
           <VideoPreview uri={recordedUri} onRetake={() => { setRecordedUri(null); setMode('recording'); }} />
@@ -203,7 +203,7 @@ export function VideoScreen() {
             />
             <Button label="Descartar" variant="ghost" onPress={handleDiscard} disabled={upload.isPending} />
           </View>
-        </ScrollView>
+        </KeyboardAvoidingView>
       </Screen>
     );
   }
@@ -214,13 +214,7 @@ export function VideoScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.sage} />
-        }
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.body}>
         <ScreenHeader
           title="Mensagem para Olívia"
           subtitle="Cápsula do tempo mágica"
@@ -229,7 +223,6 @@ export function VideoScreen() {
         <View style={styles.content}>
           <CapsuleCard />
           <RecordMessageButton onPress={handleRecordPress} />
-
           <YourVideosHeader count={videoCount} />
 
           {isError ? (
@@ -237,24 +230,49 @@ export function VideoScreen() {
           ) : !videoCount ? (
             <VideoEmptyState />
           ) : (
-            videos!.map((video, index) => (
-              <VideoHistoryCard key={video.id} video={video} index={index} />
-            ))
+            <FlatList
+              data={videos}
+              keyExtractor={(item: VideoItem) => item.id}
+              style={styles.videoList}
+              contentContainerStyle={styles.videoListContent}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              alwaysBounceVertical={false}
+              overScrollMode="never"
+              refreshControl={
+                <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.sage} />
+              }
+              renderItem={({ item, index }) => (
+                <VideoHistoryCard video={item} index={index} />
+              )}
+              ItemSeparatorComponent={() => <View style={styles.videoSeparator} />}
+            />
           )}
         </View>
-      </ScrollView>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xxl,
-    backgroundColor: colors.background,
+  body: {
+    flex: 1,
   },
   content: {
+    flex: 1,
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
     gap: spacing.lg,
+  },
+  videoList: {
+    flex: 1,
+  },
+  videoListContent: {
+    paddingBottom: spacing.md,
+    gap: spacing.md,
+  },
+  videoSeparator: {
+    height: spacing.md,
   },
   recordingRoot: { flex: 1, backgroundColor: '#000' },
   camera: { flex: 1 },
@@ -278,7 +296,6 @@ const styles = StyleSheet.create({
   recordInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: colors.lavender },
   recordInnerStop: { width: 28, height: 28, borderRadius: 6 },
   hint: { ...typography.bodySmall, color: 'rgba(255,255,255,0.85)' },
-  previewContent: { paddingBottom: spacing.xxl },
   previewVideoWrap: {
     marginHorizontal: spacing.lg,
     borderRadius: radius.lg,
@@ -306,5 +323,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     ...shadows.soft,
   },
-  previewActions: { paddingHorizontal: spacing.lg, gap: spacing.sm },
+  previewActions: { paddingHorizontal: spacing.lg, gap: spacing.sm, marginTop: 'auto', paddingBottom: spacing.xxl },
 });

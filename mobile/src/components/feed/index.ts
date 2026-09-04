@@ -6,3 +6,4 @@ export { FeedCardActions } from './FeedCardActions';
 export { ReactionPickerModal } from './ReactionPickerModal';
 export { MediaCarousel } from './MediaCarousel';
 export { FeedCardSkeleton } from './FeedCardSkeleton';
+export { FloralBackground } from '../layout/FloralBackground';

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GradientButton } from '../../components/ui';
+import { FloralBackground } from '../../components/layout/FloralBackground';
 import { colors, spacing, typography } from '../../theme';
 import type { AuthStackParamList } from '../../types';
 
@@ -24,6 +25,7 @@ export function WelcomeScreen({ navigation }: Props) {
       locations={[0, 0.5, 1]}
       style={styles.root}
     >
+      <FloralBackground />
       <ScrollView
         contentContainerStyle={[
           styles.scroll,

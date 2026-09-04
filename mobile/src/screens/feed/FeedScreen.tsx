@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen, EmptyState } from '../../components/ui';
 import {
   FeedHeader,
@@ -14,10 +16,12 @@ import {
   useDeletePhotoMutation,
   useSavePhotoMutation,
 } from '../../hooks/usePhotos';
+import { useUnreadNotificationsCount } from '../../hooks/useNotifications';
 import { colors, spacing } from '../../theme';
-import type { PhotoFeedItem } from '../../types';
+import type { MainStackParamList, PhotoFeedItem } from '../../types';
 
 export function FeedScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const {
     data,
     isLoading,
@@ -29,6 +33,7 @@ export function FeedScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useFeedQuery();
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount();
   const react = useReactMutation();
   const removeReaction = useRemoveReactionMutation();
   const deletePhoto = useDeletePhotoMutation();
@@ -43,15 +48,28 @@ export function FeedScreen() {
 
   const activePhoto = items.find((p) => p.id === reactionModal);
 
+  const openNotifications = useCallback(() => {
+    const parent = navigation.getParent();
+    if (parent) parent.navigate('Notifications');
+    else navigation.navigate('Notifications');
+  }, [navigation]);
+
   const onEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const header = (
+    <FeedHeader
+      notificationCount={unreadCount}
+      onNotificationPress={openNotifications}
+    />
+  );
 
   if (isLoading) {
     return (
       <Screen>
         <View style={styles.skeletonList}>
-          <FeedHeader />
+          {header}
           {[1, 2, 3].map((k) => (
             <View key={k} style={styles.skeletonWrap}>
               <FeedCardSkeleton />
@@ -74,7 +92,7 @@ export function FeedScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
-        ListHeaderComponent={<FeedHeader />}
+        ListHeaderComponent={header}
         ListFooterComponent={
           isFetchingNextPage ? (
             <ActivityIndicator
@@ -145,7 +163,6 @@ export function FeedScreen() {
 
 const styles = StyleSheet.create({
   list: {
-    paddingHorizontal: spacing.md,
     paddingBottom: spacing.xl,
   },
   separator: {
@@ -155,7 +172,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   skeletonList: {
-    paddingHorizontal: spacing.md,
+    flex: 1,
     paddingBottom: spacing.xl,
     gap: spacing.md,
   },

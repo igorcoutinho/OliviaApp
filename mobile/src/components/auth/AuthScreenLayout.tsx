@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../theme';
+import { FloralBackground } from '../layout/FloralBackground';
 
 interface Props {
   children: ReactNode;
@@ -19,6 +20,7 @@ export function AuthScreenLayout({ children }: Props) {
 
   return (
     <LinearGradient colors={[colors.cream, colors.creamMid, colors.cream]} style={styles.root}>
+      <FloralBackground />
       <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView
         style={styles.flex}

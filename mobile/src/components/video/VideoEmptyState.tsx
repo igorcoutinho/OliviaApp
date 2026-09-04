@@ -17,7 +17,10 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    borderRadius: 20,
   },
   icon: {
     fontSize: 48,

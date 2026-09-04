@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.moss,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

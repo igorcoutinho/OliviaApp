@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { colors, radius, spacing, fonts } from '../../theme';
+
+const EDGE_GAP = 16;
 
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60);
@@ -25,6 +29,8 @@ interface Props {
 }
 
 export function VideoPlayerModal({ uri, visible, onClose, title = 'Vídeo' }: Props) {
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -61,21 +67,38 @@ export function VideoPlayerModal({ uri, visible, onClose, title = 'Vídeo' }: Pr
 
   const progress = duration > 0 ? Math.min(currentTime / duration, 1) : 0;
 
+  const cardWidth = Math.min(width - EDGE_GAP * 2, 420);
+  const cardMaxHeight =
+    height - Math.max(insets.top, EDGE_GAP) - Math.max(insets.bottom, EDGE_GAP) - EDGE_GAP * 2;
+  const chromeHeight = 28 + spacing.md + 32 + spacing.lg * 2;
+  const videoHeight = Math.min(420, Math.max(280, cardMaxHeight - chromeHeight));
+
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={styles.backdrop}>
+      <View
+        style={[
+          styles.backdrop,
+          {
+            paddingTop: Math.max(insets.top, EDGE_GAP),
+            paddingBottom: Math.max(insets.bottom, EDGE_GAP),
+            paddingHorizontal: EDGE_GAP,
+          },
+        ]}
+      >
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
-        <View style={styles.modalCard}>
+        <View style={[styles.modalCard, { width: cardWidth, maxHeight: cardMaxHeight }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose} hitSlop={12}>
               <Ionicons name="close" size={14} color={colors.lavender} />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.videoContainer}
+            style={[styles.videoContainer, { height: videoHeight }]}
             onPress={togglePlay}
             activeOpacity={1}
           >
@@ -113,15 +136,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
   },
   modalCard: {
     backgroundColor: colors.white,
     borderRadius: radius.lg,
     padding: spacing.lg,
     gap: spacing.md,
-    width: '100%',
-    maxWidth: 350,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
@@ -132,8 +152,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   title: {
+    flex: 1,
     fontFamily: fonts.heading,
     fontSize: 22,
     color: colors.lavender,
@@ -148,7 +170,6 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     width: '100%',
-    height: 360,
     backgroundColor: '#120f1a',
     borderRadius: 16,
     overflow: 'hidden',

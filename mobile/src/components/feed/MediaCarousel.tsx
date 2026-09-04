@@ -3,25 +3,21 @@ import {
   View,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
   type ViewToken,
   type LayoutChangeEvent,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
 import type { PhotoMediaItem } from '../../types';
 import { colors } from '../../theme';
-
-const IMAGE_HEIGHT = 390;
+import { FEED_MEDIA_HEIGHT, InlineFeedVideo } from './InlineFeedVideo';
 
 interface Props {
   media: PhotoMediaItem[];
   photoId: string;
   onIndexChange?: (index: number) => void;
-  onVideoPress?: (url: string) => void;
 }
 
-export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: Props) {
+export function MediaCarousel({ media, photoId, onIndexChange }: Props) {
   const [containerWidth, setContainerWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<FlatList>(null);
@@ -43,28 +39,25 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
 
   if (media.length === 1) {
     const item = media[0]!;
-    if (item.type === 'video') {
-      return (
-        <TouchableOpacity
-          style={[styles.singleContainer, styles.videoBg]}
-          onPress={() => onVideoPress?.(item.url)}
-          activeOpacity={0.9}
-        >
-          <View style={styles.playCircle}>
-            <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
-          </View>
-        </TouchableOpacity>
-      );
-    }
     return (
-      <Image
-        source={{ uri: item.url, cacheKey: `${photoId}-0` }}
-        style={styles.singleContainer}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        recyclingKey={`${photoId}-0`}
-        transition={200}
-      />
+      <View onLayout={onLayout}>
+        {containerWidth > 0 ? (
+          item.type === 'video' ? (
+            <InlineFeedVideo uri={item.url} active width={containerWidth} />
+          ) : (
+            <Image
+              source={{ uri: item.url, cacheKey: `${photoId}-0` }}
+              style={{ width: containerWidth, height: FEED_MEDIA_HEIGHT }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`${photoId}-0`}
+              transition={200}
+            />
+          )
+        ) : (
+          <View style={{ height: FEED_MEDIA_HEIGHT }} />
+        )}
+      </View>
     );
   }
 
@@ -78,6 +71,7 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           keyExtractor={(_, i) => String(i)}
+          extraData={activeIndex}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
           getItemLayout={(_, index) => ({
@@ -88,21 +82,17 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
           renderItem={({ item, index }) => {
             if (item.type === 'video') {
               return (
-                <TouchableOpacity
-                  style={[styles.slide, styles.videoBg, { width: containerWidth }]}
-                  onPress={() => onVideoPress?.(item.url)}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.playCircle}>
-                    <Ionicons name="play" size={24} color="white" style={{ marginLeft: 3 }} />
-                  </View>
-                </TouchableOpacity>
+                <InlineFeedVideo
+                  uri={item.url}
+                  active={activeIndex === index}
+                  width={containerWidth}
+                />
               );
             }
             return (
               <Image
                 source={{ uri: item.url, cacheKey: `${photoId}-${index}` }}
-                style={[styles.slide, { width: containerWidth }]}
+                style={{ width: containerWidth, height: FEED_MEDIA_HEIGHT }}
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 recyclingKey={`${photoId}-${index}`}
@@ -122,31 +112,6 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
 }
 
 const styles = StyleSheet.create({
-  singleContainer: {
-    width: '100%',
-    height: IMAGE_HEIGHT,
-    backgroundColor: colors.creamMid,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slide: {
-    height: IMAGE_HEIGHT,
-    backgroundColor: colors.creamMid,
-    overflow: 'hidden',
-  },
-  videoBg: {
-    backgroundColor: '#120f1a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',

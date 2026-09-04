@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme';
+import { FloralBackground } from '../layout/FloralBackground';
 import { LoadingScreen } from './LoadingScreen';
 
 interface Props {
@@ -9,17 +10,29 @@ interface Props {
   loading?: boolean;
   loadingMessage?: string;
   style?: ViewStyle;
+  floral?: boolean;
 }
 
-export function Screen({ children, loading, loadingMessage }: Props) {
-  if (loading) return <LoadingScreen message={loadingMessage} />;
+export function Screen({
+  children,
+  loading,
+  loadingMessage,
+  style,
+  floral = true,
+}: Props) {
+  if (loading) return <LoadingScreen message={loadingMessage} floral={floral} />;
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      {children}
-    </SafeAreaView>
+    <View style={[styles.root, style]}>
+      {floral ? <FloralBackground /> : null}
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        {children}
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.background },
+  safe: { flex: 1 },
 });

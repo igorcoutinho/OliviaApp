@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { APP_ENV } from '../config/env';
 import type { User } from '../types';
+import { clearWelcomeSeen } from './welcomeStorage';
 
 const TOKEN_KEY = `auth_token_${APP_ENV}`;
 const USER_KEY = `auth_user_${APP_ENV}`;
@@ -22,4 +23,5 @@ export async function saveSession(token: string, user: User): Promise<void> {
 export async function clearSession(): Promise<void> {
   await SecureStore.deleteItemAsync(TOKEN_KEY);
   await SecureStore.deleteItemAsync(USER_KEY);
+  await clearWelcomeSeen();
 }

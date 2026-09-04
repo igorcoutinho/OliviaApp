@@ -1,4 +1,4 @@
-import { Alert, ScrollView, StyleSheet, View, Text } from 'react-native';
+import { Alert, StyleSheet, View, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Screen, Button } from '../../components/ui';
 import { ScreenHeader } from '../../components/layout/ScreenHeader';
@@ -104,10 +104,7 @@ export function ProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.body}>
         <ScreenHeader
           title="Meu Perfil"
           subtitle="Suas sementes e contribuições"
@@ -132,18 +129,19 @@ export function ProfileScreen() {
             loading={logout.isPending}
           />
         </View>
-      </ScrollView>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xxl,
-    backgroundColor: colors.background,
+  body: {
+    flex: 1,
   },
   content: {
+    flex: 1,
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
     gap: spacing.md,
   },
   errorBox: {

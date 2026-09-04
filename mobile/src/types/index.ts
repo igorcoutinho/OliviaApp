@@ -59,6 +59,11 @@ export type MainTabParamList = {
   Profile: undefined;
 };
 
+export type MainStackParamList = {
+  Tabs: undefined;
+  Notifications: undefined;
+};
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;

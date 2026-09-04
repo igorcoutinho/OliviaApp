@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
-import { View, Text, StyleSheet } from 'react-native';
+import { Alert, View, Text, StyleSheet } from 'react-native';
 import type { PhotoFeedItem } from '../../types';
-import { colors, spacing, typography, shadows } from '../../theme';
+import { spacing, typography } from '../../theme';
 import { FeedCardAuthor } from './FeedCardAuthor';
 import { FeedCardActions } from './FeedCardActions';
 import { MediaCarousel } from './MediaCarousel';
-import { VideoPlayerModal } from '../video/VideoPlayerModal';
 
 interface Props {
   item: PhotoFeedItem;
@@ -28,7 +26,6 @@ export function FeedCard({
   onDeletePress,
 }: Props) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const media = item.media?.length > 0 ? item.media : [{ type: 'image' as const, url: item.url }];
   const imageUrls = media.filter((m) => m.type === 'image').map((m) => m.url);
 
@@ -46,7 +43,6 @@ export function FeedCard({
 
   return (
     <View style={styles.card}>
-      {/* Autor */}
       <FeedCardAuthor
         fullName={item.author.full_name}
         createdAt={item.created_at}
@@ -59,7 +55,6 @@ export function FeedCard({
           media={media}
           photoId={item.id}
           onIndexChange={setCurrentMediaIndex}
-          onVideoPress={setVideoUrl}
         />
       </View>
 
@@ -84,15 +79,6 @@ export function FeedCard({
       {item.caption ? (
         <Text style={typography.postCaption}>{item.caption}</Text>
       ) : null}
-
-      {videoUrl ? (
-        <VideoPlayerModal
-          uri={videoUrl}
-          visible={!!videoUrl}
-          onClose={() => setVideoUrl(null)}
-          title="Vídeo"
-        />
-      ) : null}
     </View>
   );
 }
@@ -101,13 +87,11 @@ const H_PAD = spacing.md;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     paddingTop: 16,
     paddingHorizontal: H_PAD,
     paddingBottom: 16,
     gap: 12,
-    overflow: 'hidden',
-    ...shadows.soft,
   },
   mediaBleed: {
     marginHorizontal: -H_PAD,

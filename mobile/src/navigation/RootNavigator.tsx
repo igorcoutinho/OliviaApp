@@ -3,19 +3,24 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSession } from '../providers/SessionProvider';
 import { UserProvider } from '../providers/UserProvider';
 import { LoadingScreen } from '../components/ui';
+import { WelcomeModal } from '../components/welcome/WelcomeModal';
+import { useWelcomeModal } from '../hooks/useWelcomeModal';
 import { AuthNavigator } from './AuthNavigator';
-import { MainTabNavigator } from './MainTabNavigator';
+import { MainStackNavigator } from './MainStackNavigator';
 import type { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AuthenticatedApp() {
   const { user } = useSession();
+  const { visible, dismiss } = useWelcomeModal();
+
   if (!user) return null;
 
   return (
     <UserProvider user={user}>
-      <MainTabNavigator />
+      <MainStackNavigator />
+      <WelcomeModal visible={visible} onDismiss={dismiss} />
     </UserProvider>
   );
 }

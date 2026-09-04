@@ -20,7 +20,11 @@ export function useReactMutation() {
   return useMutation({
     mutationFn: ({ photoId, emoji }: { photoId: string; emoji: string }) =>
       photosApi.react(photoId, emoji),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.feed }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.feed });
+      qc.invalidateQueries({ queryKey: queryKeys.notifications });
+      qc.invalidateQueries({ queryKey: queryKeys.notificationsUnread });
+    },
     onError: (e: Error) => showError(e.message),
   });
 }
@@ -62,8 +66,19 @@ export function useDeletePhotoMutation() {
 
 export function useSavePhotoMutation() {
   return useMutation({
-    mutationFn: ({ url, photoId }: { url: string; photoId: string }) =>
-      savePhotoToFestaAlbum(url, photoId),
+    mutationFn: async ({ url, photoId }: { url: string; photoId: string }) => {
+      const result = await savePhotoToFestaAlbum(url, photoId);
+      const realPhotoId =
+        photoId.match(
+          /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+        )?.[1] ?? photoId;
+      try {
+        await photosApi.notifySave(realPhotoId);
+      } catch {
+        /* notificação é best-effort */
+      }
+      return result;
+    },
     onSuccess: (data) => {
       showSuccess(`Salva no álbum “${data.albumName}”`);
     },

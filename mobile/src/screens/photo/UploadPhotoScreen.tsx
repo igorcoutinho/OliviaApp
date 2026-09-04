@@ -3,12 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Image,
   Alert,
   Modal,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,15 @@ import { useUploadPhotoMutation } from '../../hooks/usePhotos';
 import { colors, radius, spacing, fonts } from '../../theme';
 
 const MAX_PHOTOS = 10;
+
+function isVideoAsset(asset: ImagePicker.ImagePickerAsset): boolean {
+  if (asset.type === 'video' || asset.type === 'pairedVideo') return true;
+  if (asset.mimeType?.startsWith('video/')) return true;
+  if (typeof asset.duration === 'number' && asset.duration > 0 && asset.type !== 'image') {
+    return true;
+  }
+  return false;
+}
 
 export function UploadPhotoScreen() {
   const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
@@ -34,8 +44,12 @@ export function UploadPhotoScreen() {
     if (!perm.granted) return;
 
     const remaining = MAX_PHOTOS - photos.length;
-    if (remaining <= 0) {
+    if (fromCamera && remaining <= 0) {
       Alert.alert('Limite atingido', `Você já adicionou ${MAX_PHOTOS} fotos.`);
+      return;
+    }
+    if (!fromCamera && remaining <= 0 && video) {
+      Alert.alert('Limite atingido', `Você já adicionou ${MAX_PHOTOS} fotos e 1 vídeo.`);
       return;
     }
 
@@ -49,40 +63,29 @@ export function UploadPhotoScreen() {
       : await ImagePicker.launchImageLibraryAsync({
           quality: 0.7,
           allowsMultipleSelection: true,
-          selectionLimit: remaining,
+          selectionLimit: Math.max(remaining, 0) + (video ? 0 : 1),
           exif: false,
-          mediaTypes: ['images'],
+          mediaTypes: ImagePicker.MediaTypeOptions.All,
+          videoMaxDuration: 120,
         });
 
     if (result.canceled || result.assets.length === 0) return;
 
     setIsPreparing(true);
     try {
-      // deixa o overlay pintar antes de montar as thumbs
       await new Promise((r) => setTimeout(r, 40));
-      setPhotos((prev) => [...prev, ...result.assets].slice(0, MAX_PHOTOS));
-      // dá tempo das Image thumbs começarem a carregar
-      await new Promise((r) => setTimeout(r, 280));
-    } finally {
-      setIsPreparing(false);
-    }
-  };
 
-  const addVideo = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return;
+      const imageAssets = result.assets.filter((a) => !isVideoAsset(a));
+      const videoAsset = result.assets.find((a) => isVideoAsset(a));
 
-    setIsPreparing(true);
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['videos'],
-        videoMaxDuration: 120,
-        quality: 0.85,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setVideo(result.assets[0]);
+      if (imageAssets.length > 0) {
+        setPhotos((prev) => [...prev, ...imageAssets].slice(0, MAX_PHOTOS));
       }
+      if (videoAsset) {
+        setVideo(videoAsset);
+      }
+
+      await new Promise((r) => setTimeout(r, 280));
     } finally {
       setIsPreparing(false);
     }
@@ -120,7 +123,8 @@ export function UploadPhotoScreen() {
     );
   };
 
-  const hasContent = photos.length > 0;
+  const hasMedia = photos.length > 0 || !!video;
+  const canPublish = photos.length > 0;
   const showLoading = upload.isPending || isPreparing;
   const loadingTitle = upload.isPending ? 'Enviando fotos...' : 'Preparando fotos...';
   const loadingSub = upload.isPending
@@ -138,17 +142,14 @@ export function UploadPhotoScreen() {
           </View>
         </View>
       </Modal>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.body}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScreenHeader title="Plantar um Momento" subtitle="Compartilhe fotos especiais" />
 
         <View style={styles.container}>
-          {/* Grade de fotos selecionadas */}
-          {hasContent ? (
+          {hasMedia ? (
             <View style={styles.grid}>
               {photos.map((p, i) => (
                 <View key={i} style={styles.thumb}>
@@ -162,6 +163,21 @@ export function UploadPhotoScreen() {
                   </TouchableOpacity>
                 </View>
               ))}
+              {video ? (
+                <View style={styles.thumb}>
+                  <View style={styles.videoThumb}>
+                    <Ionicons name="videocam" size={28} color={colors.lavender} />
+                    <Text style={styles.videoThumbText}>Vídeo</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={() => setVideo(null)}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="close-circle" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ) : null}
               {photos.length < MAX_PHOTOS && (
                 <TouchableOpacity style={styles.addMoreBtn} onPress={() => addPhotos(false)}>
                   <Ionicons name="add" size={28} color={colors.sage} />
@@ -174,30 +190,11 @@ export function UploadPhotoScreen() {
               <View style={styles.iconWrap}>
                 <Ionicons name="images-outline" size={36} color={colors.sage} />
               </View>
-              <Text style={styles.emptyLabel}>Toque para selecionar fotos</Text>
-              <Text style={styles.emptySub}>Até {MAX_PHOTOS} fotos por post</Text>
+              <Text style={styles.emptyLabel}>Toque para selecionar da galeria</Text>
+              <Text style={styles.emptySub}>Fotos e vídeo · até {MAX_PHOTOS} fotos</Text>
             </TouchableOpacity>
           )}
 
-          {/* Vídeo opcional */}
-          <View style={styles.videoRow}>
-            {video ? (
-              <View style={styles.videoChip}>
-                <Ionicons name="videocam" size={16} color={colors.lavender} />
-                <Text style={styles.videoChipText} numberOfLines={1}>Vídeo adicionado</Text>
-                <TouchableOpacity onPress={() => setVideo(null)} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color="#B85C6A" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.addVideoBtn} onPress={addVideo}>
-                <Ionicons name="videocam-outline" size={18} color={colors.lavender} />
-                <Text style={styles.addVideoBtnText}>Adicionar vídeo (opcional)</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Botões câmera / galeria */}
           <View style={styles.sourceRow}>
             <TouchableOpacity style={styles.sourceBtn} onPress={() => addPhotos(true)}>
               <Ionicons name="camera-outline" size={18} color={colors.sage} />
@@ -218,21 +215,22 @@ export function UploadPhotoScreen() {
           <PublishGardenButton
             onPress={handleUpload}
             loading={upload.isPending}
-            disabled={!hasContent}
+            disabled={!canPublish}
           />
         </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xxl,
-    backgroundColor: colors.background,
+  body: {
+    flex: 1,
   },
   container: {
+    flex: 1,
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
   emptyArea: {
@@ -277,6 +275,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: colors.creamMid,
   },
+  videoThumb: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#f2edf8',
+  },
+  videoThumbText: {
+    fontSize: 12,
+    fontFamily: fonts.bodyMedium,
+    color: colors.lavender,
+  },
   removeBtn: {
     position: 'absolute',
     top: 4,
@@ -289,6 +299,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.sage,
     borderStyle: 'dashed',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
@@ -297,39 +308,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.sage,
     fontFamily: fonts.bodyMedium,
-  },
-  videoRow: {
-    alignItems: 'flex-start',
-  },
-  videoChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#f2edf8',
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  videoChipText: {
-    fontSize: 13,
-    fontFamily: fonts.bodyMedium,
-    color: colors.lavender,
-    flex: 1,
-  },
-  addVideoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(200,180,215,0.6)',
-    borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  addVideoBtnText: {
-    fontSize: 14,
-    fontFamily: fonts.bodyMedium,
-    color: colors.lavender,
   },
   sourceRow: {
     flexDirection: 'row',
@@ -345,6 +323,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1.5,
     borderColor: colors.sage,
+    backgroundColor: colors.white,
   },
   sourceBtnGallery: {
     borderColor: colors.lavender,

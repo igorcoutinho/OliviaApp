@@ -51,12 +51,12 @@ export function FeedCardActions({
             {myReaction ? (
               <>
                 <Text style={styles.reactEmoji}>{myReaction}</Text>
-                <Text style={typography.reactedLabel}>Adorei</Text>
+                <Text style={typography.reactedLabel}>Reagi</Text>
               </>
             ) : (
               <>
                 <Text style={styles.flowerIcon}>🌸</Text>
-                <Text style={typography.adoreButton}>Adorar</Text>
+                <Text style={typography.adoreButton}>Reagir</Text>
               </>
             )}
           </LinearGradient>

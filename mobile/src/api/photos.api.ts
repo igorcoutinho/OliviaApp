@@ -69,6 +69,9 @@ export const photosApi = {
   removeReaction: (photoId: string) =>
     apiClient(`/api/photos/${photoId}/react`, { method: 'DELETE' }),
 
+  notifySave: (photoId: string) =>
+    apiClient(`/api/photos/${photoId}/notify-save`, { method: 'POST' }),
+
   delete: (photoId: string) =>
     apiClient<{ message: string }>(`/api/photos/${photoId}`, { method: 'DELETE' }),
 };

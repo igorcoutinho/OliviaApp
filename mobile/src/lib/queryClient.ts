@@ -14,4 +14,6 @@ export const queryKeys = {
   myVideos: ['myVideos'] as const,
   me: ['me'] as const,
   profile: ['profile'] as const,
+  notifications: ['notifications'] as const,
+  notificationsUnread: ['notifications', 'unread-count'] as const,
 };
