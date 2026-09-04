@@ -11,7 +11,7 @@ export function useFeedQuery() {
     queryFn: ({ pageParam }) => photosApi.getFeed(pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

@@ -29,13 +29,13 @@ export function ProfileScreen() {
 
     const result = fromCamera
       ? await ImagePicker.launchCameraAsync({
-          quality: 0.8,
+          quality: 0.6,
           allowsEditing: true,
           aspect: [1, 1],
           exif: false,
         })
       : await ImagePicker.launchImageLibraryAsync({
-          quality: 0.8,
+          quality: 0.6,
           allowsEditing: true,
           aspect: [1, 1],
           exif: false,

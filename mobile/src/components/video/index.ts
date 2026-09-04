@@ -3,3 +3,4 @@ export { RecordMessageButton } from './RecordMessageButton';
 export { YourVideosHeader } from './YourVideosHeader';
 export { VideoEmptyState } from './VideoEmptyState';
 export { VideoHistoryCard } from './VideoHistoryCard';
+export { VideoPlayerModal } from './VideoPlayerModal';

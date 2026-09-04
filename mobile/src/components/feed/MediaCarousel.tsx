@@ -46,7 +46,7 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
     if (item.type === 'video') {
       return (
         <TouchableOpacity
-          style={styles.singleContainer}
+          style={[styles.singleContainer, styles.videoBg]}
           onPress={() => onVideoPress?.(item.url)}
           activeOpacity={0.9}
         >
@@ -58,7 +58,7 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
     }
     return (
       <Image
-        source={{ uri: item.url }}
+        source={{ uri: item.url, cacheKey: `${photoId}-0` }}
         style={styles.singleContainer}
         contentFit="cover"
         cachePolicy="memory-disk"
@@ -101,7 +101,7 @@ export function MediaCarousel({ media, photoId, onIndexChange, onVideoPress }: P
             }
             return (
               <Image
-                source={{ uri: item.url }}
+                source={{ uri: item.url, cacheKey: `${photoId}-${index}` }}
                 style={[styles.slide, { width: containerWidth }]}
                 contentFit="cover"
                 cachePolicy="memory-disk"

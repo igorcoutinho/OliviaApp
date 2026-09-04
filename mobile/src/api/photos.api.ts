@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { PhotoFeedItem } from '../types';
+import { compressImage } from '../lib/compressImage';
 
 export interface MediaFile {
   uri: string;
@@ -35,12 +36,14 @@ export const photosApi = {
     formData.append('caption', caption);
 
     for (let i = 0; i < photos.length; i++) {
-      const p = photos[i];
-      const response = await fetch(p.uri);
+      const p = photos[i]!;
+      const compressed = await compressImage(p.uri, 'photo');
+      const response = await fetch(compressed.uri);
       let blob = await response.blob();
-      const mimeType = p.mimeType || 'image/jpeg';
-      if (blob.type !== mimeType) blob = new Blob([blob], { type: mimeType });
-      formData.append('photos', blob, p.fileName || `photo-${i}-${Date.now()}.jpg`);
+      if (blob.type !== compressed.mimeType) {
+        blob = new Blob([blob], { type: compressed.mimeType });
+      }
+      formData.append('photos', blob, compressed.fileName);
     }
 
     if (video) {

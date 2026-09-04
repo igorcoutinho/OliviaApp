@@ -5,3 +5,4 @@ export { FeedCardAuthor } from './FeedCardAuthor';
 export { FeedCardActions } from './FeedCardActions';
 export { ReactionPickerModal } from './ReactionPickerModal';
 export { MediaCarousel } from './MediaCarousel';
+export { FeedCardSkeleton } from './FeedCardSkeleton';

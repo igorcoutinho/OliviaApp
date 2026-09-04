@@ -4,6 +4,7 @@ import { Screen, EmptyState } from '../../components/ui';
 import {
   FeedHeader,
   FeedCard,
+  FeedCardSkeleton,
   ReactionPickerModal,
 } from '../../components/feed';
 import {
@@ -46,7 +47,20 @@ export function FeedScreen() {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isLoading) return <Screen loading />;
+  if (isLoading) {
+    return (
+      <Screen>
+        <View style={styles.skeletonList}>
+          <FeedHeader />
+          {[1, 2, 3].map((k) => (
+            <View key={k} style={styles.skeletonWrap}>
+              <FeedCardSkeleton />
+            </View>
+          ))}
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -139,5 +153,13 @@ const styles = StyleSheet.create({
   },
   loadingMore: {
     paddingVertical: spacing.lg,
+  },
+  skeletonList: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  skeletonWrap: {
+    gap: spacing.md,
   },
 });

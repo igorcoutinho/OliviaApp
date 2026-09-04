@@ -6,6 +6,7 @@ import { colors, spacing, typography, shadows } from '../../theme';
 import { FeedCardAuthor } from './FeedCardAuthor';
 import { FeedCardActions } from './FeedCardActions';
 import { MediaCarousel } from './MediaCarousel';
+import { VideoPlayerModal } from '../video/VideoPlayerModal';
 
 interface Props {
   item: PhotoFeedItem;
@@ -27,6 +28,7 @@ export function FeedCard({
   onDeletePress,
 }: Props) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const media = item.media?.length > 0 ? item.media : [{ type: 'image' as const, url: item.url }];
   const imageUrls = media.filter((m) => m.type === 'image').map((m) => m.url);
 
@@ -49,18 +51,18 @@ export function FeedCard({
         fullName={item.author.full_name}
         createdAt={item.created_at}
         avatarUrl={item.author.avatar_url}
+        authorId={item.author.id}
       />
 
-      {/* Imagem / Carrossel — sangra as bordas do card */}
       <View style={styles.mediaBleed}>
         <MediaCarousel
           media={media}
           photoId={item.id}
           onIndexChange={setCurrentMediaIndex}
+          onVideoPress={setVideoUrl}
         />
       </View>
 
-      {/* Actions */}
       <FeedCardActions
         reactions={item.reactions}
         myReaction={item.myReaction}
@@ -79,9 +81,17 @@ export function FeedCard({
         onDeletePress={item.isMine ? handleDelete : undefined}
       />
 
-      {/* Caption — abaixo das actions */}
       {item.caption ? (
         <Text style={typography.postCaption}>{item.caption}</Text>
+      ) : null}
+
+      {videoUrl ? (
+        <VideoPlayerModal
+          uri={videoUrl}
+          visible={!!videoUrl}
+          onClose={() => setVideoUrl(null)}
+          title="Vídeo"
+        />
       ) : null}
     </View>
   );

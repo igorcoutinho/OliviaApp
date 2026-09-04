@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +24,7 @@ export function UploadPhotoScreen() {
   const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [video, setVideo] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [caption, setCaption] = useState('');
+  const [isPreparing, setIsPreparing] = useState(false);
   const upload = useUploadPhotoMutation();
 
   const addPhotos = async (fromCamera: boolean) => {
@@ -38,21 +41,30 @@ export function UploadPhotoScreen() {
 
     const result = fromCamera
       ? await ImagePicker.launchCameraAsync({
-          quality: 0.85,
+          quality: 0.7,
           allowsEditing: true,
           aspect: [4, 3],
           exif: false,
         })
       : await ImagePicker.launchImageLibraryAsync({
-          quality: 0.85,
+          quality: 0.7,
           allowsMultipleSelection: true,
           selectionLimit: remaining,
           exif: false,
           mediaTypes: ['images'],
         });
 
-    if (!result.canceled) {
+    if (result.canceled || result.assets.length === 0) return;
+
+    setIsPreparing(true);
+    try {
+      // deixa o overlay pintar antes de montar as thumbs
+      await new Promise((r) => setTimeout(r, 40));
       setPhotos((prev) => [...prev, ...result.assets].slice(0, MAX_PHOTOS));
+      // dá tempo das Image thumbs começarem a carregar
+      await new Promise((r) => setTimeout(r, 280));
+    } finally {
+      setIsPreparing(false);
     }
   };
 
@@ -60,14 +72,19 @@ export function UploadPhotoScreen() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      videoMaxDuration: 120,
-      quality: 0.85,
-    });
+    setIsPreparing(true);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['videos'],
+        videoMaxDuration: 120,
+        quality: 0.85,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setVideo(result.assets[0]);
+      if (!result.canceled && result.assets[0]) {
+        setVideo(result.assets[0]);
+      }
+    } finally {
+      setIsPreparing(false);
     }
   };
 
@@ -104,9 +121,23 @@ export function UploadPhotoScreen() {
   };
 
   const hasContent = photos.length > 0;
+  const showLoading = upload.isPending || isPreparing;
+  const loadingTitle = upload.isPending ? 'Enviando fotos...' : 'Preparando fotos...';
+  const loadingSub = upload.isPending
+    ? 'Isso pode levar alguns instantes 🌸'
+    : 'Montando as imagens selecionadas';
 
   return (
     <Screen>
+      <Modal visible={showLoading} transparent animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color={colors.lavender} />
+            <Text style={styles.loadingText}>{loadingTitle}</Text>
+            <Text style={styles.loadingSubText}>{loadingSub}</Text>
+          </View>
+        </View>
+      </Modal>
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
@@ -227,7 +258,7 @@ const styles = StyleSheet.create({
   emptyLabel: {
     fontFamily: fonts.bodyMedium,
     fontSize: 15,
-    color: colors.textDark,
+    color: colors.text,
   },
   emptySub: {
     fontSize: 13,
@@ -322,5 +353,30 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 14,
     color: colors.sage,
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingBox: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 48,
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 17,
+    color: colors.text,
+  },
+  loadingSubText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
 });

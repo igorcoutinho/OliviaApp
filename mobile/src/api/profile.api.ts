@@ -1,18 +1,20 @@
 import { apiClient } from './client';
 import { createFormDataWithFile } from './formData';
+import { compressImage } from '../lib/compressImage';
 import type { ProfileResponse, User } from '../types';
 
 export const profileApi = {
   get: () => apiClient<ProfileResponse>('/api/profile'),
 
-  uploadAvatar: async (uri: string, mimeType = 'image/jpeg', fileName?: string) => {
+  uploadAvatar: async (uri: string, _mimeType = 'image/jpeg', _fileName?: string) => {
+    const compressed = await compressImage(uri, 'avatar');
     const formData = await createFormDataWithFile(
       {},
       'avatar',
       {
-        uri,
-        mimeType,
-        fileName: fileName ?? `avatar-${Date.now()}.jpg`,
+        uri: compressed.uri,
+        mimeType: compressed.mimeType,
+        fileName: compressed.fileName,
       },
     );
 

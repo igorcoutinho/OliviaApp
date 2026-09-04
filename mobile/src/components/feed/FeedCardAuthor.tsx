@@ -7,6 +7,7 @@ interface Props {
   fullName: string;
   createdAt: string;
   avatarUrl?: string | null;
+  authorId?: string;
 }
 
 function getInitials(name: string): string {
@@ -17,17 +18,17 @@ function getInitials(name: string): string {
     .join('');
 }
 
-export function FeedCardAuthor({ fullName, createdAt, avatarUrl }: Props) {
+export function FeedCardAuthor({ fullName, createdAt, avatarUrl, authorId }: Props) {
   return (
     <View style={styles.row}>
       <View style={styles.avatarWrap}>
         {avatarUrl ? (
           <Image
-            source={{ uri: avatarUrl }}
+            source={{ uri: avatarUrl, cacheKey: `avatar-${authorId ?? fullName}` }}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             cachePolicy="memory-disk"
-            recyclingKey={avatarUrl}
+            recyclingKey={`avatar-${authorId ?? fullName}`}
             transition={150}
           />
         ) : (
