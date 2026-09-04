@@ -29,7 +29,7 @@ export function ProfileCard({
         loading={avatarLoading}
       />
       <View style={styles.meta}>
-        <Text style={typography.profileName}>{fullName} 🌸</Text>
+        <Text style={typography.profileName}>{fullName}</Text>
         <Text style={typography.profileHandle}>@{username}</Text>
       </View>
     </View>
