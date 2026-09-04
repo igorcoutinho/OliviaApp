@@ -37,6 +37,20 @@ export interface PhotoFeedItem {
   isMine?: boolean;
   reactions: { emoji: string; username: string; full_name: string; user_id: string }[];
   myReaction: string | null;
+  commentsCount?: number;
+  likesCount?: number;
+  topComment?: {
+    id: string;
+    body: string;
+    likeCount: number;
+    myVote: 1 | -1 | null;
+    author: {
+      id: string;
+      full_name: string;
+      username: string;
+      avatar_url: string | null;
+    };
+  } | null;
 }
 
 export interface VideoItem {
@@ -62,6 +76,7 @@ export type MainTabParamList = {
 export type MainStackParamList = {
   Tabs: undefined;
   Notifications: undefined;
+  Comments: { photoId: string };
 };
 
 export type RootStackParamList = {

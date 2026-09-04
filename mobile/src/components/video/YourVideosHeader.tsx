@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { fonts, radius, spacing } from '../../theme';
 
 interface Props {
   count: number;
@@ -10,9 +10,9 @@ export function YourVideosHeader({ count }: Props) {
 
   return (
     <View style={styles.row}>
-      <Text style={typography.videosSectionTitle}>Seus vídeos plantados</Text>
+      <Text style={styles.title}>Seus vídeos plantados</Text>
       <View style={styles.badge}>
-        <Text style={typography.videosCountBadge}>{label}</Text>
+        <Text style={styles.badgeText}>{label}</Text>
       </View>
     </View>
   );
@@ -23,11 +23,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: 10,
+  },
+  title: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: '#6b4d8a',
   },
   badge: {
-    backgroundColor: colors.lilacLight,
-    paddingHorizontal: spacing.sm + 2,
+    backgroundColor: '#f2edf8',
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: radius.full,
+    borderRadius: radius.pill,
+  },
+  badgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#6b4d8a',
   },
 });

@@ -10,12 +10,18 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui';
 import { ScreenHeader } from '../../components/layout/ScreenHeader';
-import { CaptionField, PublishGardenButton } from '../../components/photo';
+import {
+  CaptionField,
+  PhotoSourceButtons,
+  PhotoUploadArea,
+  PublishGardenButton,
+} from '../../components/photo';
 import { useUploadPhotoMutation } from '../../hooks/usePhotos';
 import { colors, radius, spacing, fonts } from '../../theme';
 
@@ -65,7 +71,7 @@ export function UploadPhotoScreen() {
           allowsMultipleSelection: true,
           selectionLimit: Math.max(remaining, 0) + (video ? 0 : 1),
           exif: false,
-          mediaTypes: ImagePicker.MediaTypeOptions.All,
+          mediaTypes: ['images', 'videos'],
           videoMaxDuration: 120,
         });
 
@@ -146,13 +152,21 @@ export function UploadPhotoScreen() {
         style={styles.body}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScreenHeader title="Plantar um Momento" subtitle="Compartilhe fotos especiais" />
+        <ScreenHeader
+          title="Plantar um Momento"
+          subtitle="Compartilhe uma foto especial"
+        />
 
-        <View style={styles.container}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {hasMedia ? (
             <View style={styles.grid}>
               {photos.map((p, i) => (
-                <View key={i} style={styles.thumb}>
+                <View key={`${p.uri}-${i}`} style={styles.thumb}>
                   <Image source={{ uri: p.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
                   <TouchableOpacity
                     style={styles.removeBtn}
@@ -180,34 +194,23 @@ export function UploadPhotoScreen() {
               ) : null}
               {photos.length < MAX_PHOTOS && (
                 <TouchableOpacity style={styles.addMoreBtn} onPress={() => addPhotos(false)}>
-                  <Ionicons name="add" size={28} color={colors.sage} />
+                  <Ionicons name="add" size={28} color="#6b4d8a" />
                   <Text style={styles.addMoreText}>{MAX_PHOTOS - photos.length}</Text>
                 </TouchableOpacity>
               )}
             </View>
           ) : (
-            <TouchableOpacity style={styles.emptyArea} onPress={() => addPhotos(false)}>
-              <View style={styles.iconWrap}>
-                <Ionicons name="images-outline" size={36} color={colors.sage} />
-              </View>
-              <Text style={styles.emptyLabel}>Toque para selecionar da galeria</Text>
-              <Text style={styles.emptySub}>Fotos e vídeo · até {MAX_PHOTOS} fotos</Text>
-            </TouchableOpacity>
+            <PhotoUploadArea onPress={() => addPhotos(false)} />
           )}
 
-          <View style={styles.sourceRow}>
-            <TouchableOpacity style={styles.sourceBtn} onPress={() => addPhotos(true)}>
-              <Ionicons name="camera-outline" size={18} color={colors.sage} />
-              <Text style={styles.sourceBtnText}>Câmera</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.sourceBtn, styles.sourceBtnGallery]} onPress={() => addPhotos(false)}>
-              <Ionicons name="images-outline" size={18} color={colors.lavender} />
-              <Text style={[styles.sourceBtnText, { color: colors.lavender }]}>Galeria</Text>
-            </TouchableOpacity>
-          </View>
+          <PhotoSourceButtons
+            onCamera={() => addPhotos(true)}
+            onGallery={() => addPhotos(false)}
+            disabled={upload.isPending || isPreparing}
+          />
 
           <CaptionField
-            placeholder="Deixe uma mensagem carinhosa..."
+            placeholder="Deixe uma mensagem carinhosa sobre este momento..."
             value={caption}
             onChangeText={setCaption}
           />
@@ -217,7 +220,7 @@ export function UploadPhotoScreen() {
             loading={upload.isPending}
             disabled={!canPublish}
           />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -227,41 +230,14 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
   },
-  container: {
+  scroll: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+  },
+  container: {
+    paddingHorizontal: spacing.screenLg,
+    paddingTop: spacing.xl,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  emptyArea: {
-    width: '100%',
-    height: 200,
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    borderWidth: 2,
-    borderColor: colors.sage,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  iconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 15,
-    color: colors.text,
-  },
-  emptySub: {
-    fontSize: 13,
-    color: colors.textMuted,
-    fontFamily: fonts.body,
+    gap: spacing.xl,
   },
   grid: {
     flexDirection: 'row',
@@ -296,8 +272,8 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: colors.sage,
+    borderWidth: 1.5,
+    borderColor: 'rgba(179, 157, 219, 0.4)',
     borderStyle: 'dashed',
     backgroundColor: colors.white,
     alignItems: 'center',
@@ -306,32 +282,8 @@ const styles = StyleSheet.create({
   },
   addMoreText: {
     fontSize: 11,
-    color: colors.sage,
+    color: '#6b4d8a',
     fontFamily: fonts.bodyMedium,
-  },
-  sourceRow: {
-    flexDirection: 'row',
-    gap: spacing.sm + 4,
-  },
-  sourceBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.sage,
-    backgroundColor: colors.white,
-  },
-  sourceBtnGallery: {
-    borderColor: colors.lavender,
-  },
-  sourceBtnText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    color: colors.sage,
   },
   loadingOverlay: {
     flex: 1,

@@ -25,6 +25,7 @@ export function FeedScreen() {
   const {
     data,
     isLoading,
+    isPending,
     isRefetching,
     refetch,
     isError,
@@ -46,6 +47,8 @@ export function FeedScreen() {
     [data],
   );
 
+  const showSkeleton = isPending || (isLoading && items.length === 0);
+
   const activePhoto = items.find((p) => p.id === reactionModal);
 
   const openNotifications = useCallback(() => {
@@ -65,13 +68,13 @@ export function FeedScreen() {
     />
   );
 
-  if (isLoading) {
+  if (showSkeleton) {
     return (
       <Screen>
         <View style={styles.skeletonList}>
           {header}
           {[1, 2, 3].map((k) => (
-            <View key={k} style={styles.skeletonWrap}>
+            <View key={k}>
               <FeedCardSkeleton />
             </View>
           ))}
@@ -174,9 +177,6 @@ const styles = StyleSheet.create({
   skeletonList: {
     flex: 1,
     paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  skeletonWrap: {
     gap: spacing.md,
   },
 });

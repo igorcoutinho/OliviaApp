@@ -1,5 +1,5 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { fonts, radius } from '../../theme';
 
 interface Props {
   onPress: () => void;
@@ -15,9 +15,9 @@ export function LogoutButton({ onPress, loading }: Props) {
       activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={colors.moss} />
+        <ActivityIndicator color="#8c72a8" />
       ) : (
-        <Text style={typography.logoutButton}>Sair do Jardim</Text>
+        <Text style={styles.label}>Sair do Jardim</Text>
       )}
     </TouchableOpacity>
   );
@@ -28,9 +28,19 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.moss,
-    backgroundColor: colors.white,
+    borderColor: '#708064',
+    backgroundColor: '#fffaf5',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#708064',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  label: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: '#8c72a8',
   },
 });

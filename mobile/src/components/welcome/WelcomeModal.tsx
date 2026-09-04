@@ -1,5 +1,4 @@
 import {
-  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -8,6 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { colors, fonts, radius } from '../../theme';
 
 const BANNER = require('../../../assets/welcome/banner.png');
 const EDGE_GAP = 16;
+const BANNER_HEIGHT = 112;
 
 const FEATURES: {
   icon: keyof typeof Ionicons.glyphMap;
@@ -74,7 +75,12 @@ export function WelcomeModal({ visible, onDismiss }: Props) {
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.bannerWrap}>
-              <Image source={BANNER} style={styles.banner} resizeMode="cover" />
+              <Image
+                source={BANNER}
+                style={styles.banner}
+                contentFit="cover"
+                contentPosition="top"
+              />
             </View>
 
             <View style={styles.body}>
@@ -166,7 +172,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   bannerWrap: {
-    height: 160,
+    height: BANNER_HEIGHT,
     width: '100%',
     overflow: 'hidden',
   },
@@ -176,7 +182,7 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 20,
     paddingBottom: 24,
     gap: 20,
   },

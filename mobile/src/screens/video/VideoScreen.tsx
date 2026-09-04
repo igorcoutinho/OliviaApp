@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  FlatList, RefreshControl, Alert, KeyboardAvoidingView, Platform,
+  FlatList, RefreshControl, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
@@ -13,6 +13,7 @@ import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import {
   CapsuleCard,
   RecordMessageButton,
+  RecordMessageSheet,
   YourVideosHeader,
   VideoEmptyState,
   VideoHistoryCard,
@@ -96,6 +97,7 @@ function RecordingView({
 
 export function VideoScreen() {
   const [mode, setMode] = useState<Mode>('home');
+  const [sheetVisible, setSheetVisible] = useState(false);
   const [recordedUri, setRecordedUri] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const { data: videos, isLoading, isRefetching, refetch, isError, error } = useMyVideosQuery();
@@ -153,15 +155,21 @@ export function VideoScreen() {
   };
 
   const handleRecordPress = () => {
-    Alert.alert(
-      'Sua mensagem',
-      'Como você quer enviar?',
-      [
-        { text: 'Gravar agora', onPress: startRecording },
-        { text: 'Escolher da galeria', onPress: pickFromGallery },
-        { text: 'Cancelar', style: 'cancel' },
-      ],
-    );
+    setSheetVisible(true);
+  };
+
+  const handleSheetRecord = () => {
+    setSheetVisible(false);
+    setTimeout(() => {
+      void startRecording();
+    }, 280);
+  };
+
+  const handleSheetGallery = () => {
+    setSheetVisible(false);
+    setTimeout(() => {
+      void pickFromGallery();
+    }, 280);
   };
 
   if (mode === 'recording') {
@@ -250,6 +258,13 @@ export function VideoScreen() {
           )}
         </View>
       </View>
+
+      <RecordMessageSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        onRecord={handleSheetRecord}
+        onGallery={handleSheetGallery}
+      />
     </Screen>
   );
 }
@@ -260,9 +275,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: spacing.lg,
-    gap: spacing.lg,
+    gap: 20,
   },
   videoList: {
     flex: 1,

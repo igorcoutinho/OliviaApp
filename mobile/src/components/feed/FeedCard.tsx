@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { Alert, View, Text, StyleSheet } from 'react-native';
-import type { PhotoFeedItem } from '../../types';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { PhotoFeedItem, MainStackParamList } from '../../types';
 import { spacing, typography } from '../../theme';
 import { FeedCardAuthor } from './FeedCardAuthor';
 import { FeedCardActions } from './FeedCardActions';
 import { MediaCarousel } from './MediaCarousel';
+import { FeedCommentsPreview } from '../comments/FeedCommentsPreview';
+import {
+  useCreateCommentMutation,
+  useDeleteCommentMutation,
+  useVoteCommentMutation,
+} from '../../hooks/useComments';
+import { useUser } from '../../providers/UserProvider';
+import type { CommentItem } from '../../api/comments.api';
 
 interface Props {
   item: PhotoFeedItem;
@@ -16,6 +26,23 @@ interface Props {
   onDeletePress?: () => void;
 }
 
+function toPreviewComment(
+  top: NonNullable<PhotoFeedItem['topComment']>,
+  myUserId: string,
+): CommentItem {
+  return {
+    id: top.id,
+    body: top.body,
+    created_at: '',
+    likeCount: top.likeCount,
+    dislikeCount: 0,
+    myVote: top.myVote,
+    isMine: top.author.id === myUserId,
+    isMostLiked: false,
+    author: top.author,
+  };
+}
+
 export function FeedCard({
   item,
   downloading,
@@ -25,9 +52,25 @@ export function FeedCard({
   onDownloadAllPress,
   onDeletePress,
 }: Props) {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const user = useUser();
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const createComment = useCreateCommentMutation(item.id);
+  const deleteComment = useDeleteCommentMutation(item.id);
+  const voteComment = useVoteCommentMutation(item.id);
+
   const media = item.media?.length > 0 ? item.media : [{ type: 'image' as const, url: item.url }];
   const imageUrls = media.filter((m) => m.type === 'image').map((m) => m.url);
+  const commentsCount = item.commentsCount ?? 0;
+  const topComment = item.topComment
+    ? toPreviewComment(item.topComment, user.id)
+    : null;
+
+  const openComments = () => {
+    const parent = navigation.getParent();
+    if (parent) parent.navigate('Comments', { photoId: item.id });
+    else navigation.navigate('Comments', { photoId: item.id });
+  };
 
   const handleDelete = () => {
     if (!onDeletePress) return;
@@ -79,6 +122,18 @@ export function FeedCard({
       {item.caption ? (
         <Text style={typography.postCaption}>{item.caption}</Text>
       ) : null}
+
+      <FeedCommentsPreview
+        topComment={topComment}
+        commentsCount={commentsCount}
+        myAvatarUrl={user.avatar_url}
+        submitting={createComment.isPending}
+        onOpenAll={openComments}
+        onSubmit={(body) => createComment.mutate(body)}
+        onLike={(commentId) => voteComment.mutate({ commentId, vote: 1 })}
+        onDislike={(commentId) => voteComment.mutate({ commentId, vote: -1 })}
+        onDelete={(commentId) => deleteComment.mutate(commentId)}
+      />
     </View>
   );
 }

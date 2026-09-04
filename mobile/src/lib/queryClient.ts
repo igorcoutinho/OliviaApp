@@ -16,4 +16,5 @@ export const queryKeys = {
   profile: ['profile'] as const,
   notifications: ['notifications'] as const,
   notificationsUnread: ['notifications', 'unread-count'] as const,
+  comments: ['comments'] as const,
 };

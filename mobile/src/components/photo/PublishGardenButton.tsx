@@ -11,6 +11,7 @@ export function PublishGardenButton({ onPress, loading, disabled }: Props) {
     <GradientButton
       label="Publicar no Jardim"
       icon="send"
+      variant="lavender"
       onPress={onPress}
       loading={loading}
       disabled={disabled}

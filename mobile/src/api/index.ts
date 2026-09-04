@@ -5,3 +5,5 @@ export { videosApi } from './videos.api';
 export { profileApi } from './profile.api';
 export { notificationsApi } from './notifications.api';
 export type { NotificationItem, NotificationsPage } from './notifications.api';
+export { commentsApi } from './comments.api';
+export type { CommentItem, CommentsPage } from './comments.api';

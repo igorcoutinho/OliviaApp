@@ -120,6 +120,9 @@ export function NotificationsScreen() {
               item={item}
               onPress={() => {
                 if (!item.read) markRead.mutate(item.id);
+                if (item.type === 'comment') {
+                  navigation.navigate('Comments', { photoId: item.photo.id });
+                }
               }}
             />
           )}

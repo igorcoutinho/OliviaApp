@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fonts.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     letterSpacing: 0.5,
     color: '#9b7db8',
     textTransform: 'uppercase',

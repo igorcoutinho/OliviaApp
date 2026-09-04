@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radius, spacing, typography, shadows } from '../../theme';
+import { fonts } from '../../theme';
 
 export function AboutCard() {
   return (
     <View style={styles.card}>
-      <Text style={typography.aboutTitle}>Sobre o Jardim da Olívia</Text>
-      <Text style={typography.aboutText}>
-        Um espaço mágico para celebrar o primeiro ano da Olívia. Compartilhe fotos no
-        jardim, deixe reações carinhosas e grave vídeos secretos que só ela verá quando
-        fizer 10 anos — como sementes plantadas hoje para florescer no futuro.
+      <Text style={styles.title}>Sobre o Jardim da Olívia</Text>
+      <Text style={styles.body}>
+        Este aplicativo é uma rede social privada e segura, criada especialmente para eternizar o
+        aniversário de 1 ano da Olívia. Todas as lembranças, fotos e vídeos plantados aqui serão
+        eternizados e entregues para ela. Obrigado por fazer parte da nossa história! 💖
       </Text>
     </View>
   );
@@ -16,10 +16,23 @@ export function AboutCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-    ...shadows.soft,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e5dec9',
+    padding: 16,
+    gap: 8,
+    width: '100%',
+  },
+  title: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: '#6b4d8a',
+  },
+  body: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#8c72a8',
   },
 });
