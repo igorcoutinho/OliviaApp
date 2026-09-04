@@ -1,4 +1,5 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../../theme';
@@ -6,6 +7,7 @@ import { colors, spacing, typography } from '../../theme';
 interface Props {
   name: string;
   avatarUrl?: string | null;
+  userId?: string;
   onPress: () => void;
   loading?: boolean;
 }
@@ -19,7 +21,9 @@ function getInitials(name: string) {
     .join('');
 }
 
-export function ProfileAvatar({ name, avatarUrl, onPress, loading }: Props) {
+export function ProfileAvatar({ name, avatarUrl, userId, onPress, loading }: Props) {
+  const cacheKey = `avatar-${userId ?? name}`;
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} disabled={loading}>
       <LinearGradient
@@ -30,7 +34,14 @@ export function ProfileAvatar({ name, avatarUrl, onPress, loading }: Props) {
       >
         <View style={styles.inner}>
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.image} />
+            <Image
+              source={{ uri: avatarUrl, cacheKey }}
+              style={styles.image}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={cacheKey}
+              transition={0}
+            />
           ) : (
             <Text style={styles.initials}>{getInitials(name)}</Text>
           )}

@@ -4,7 +4,7 @@ export type CompressKind = 'photo' | 'avatar';
 
 const PRESETS: Record<CompressKind, { maxWidth: number; compress: number }> = {
   photo: { maxWidth: 1280, compress: 0.65 },
-  avatar: { maxWidth: 400, compress: 0.6 },
+  avatar: { maxWidth: 256, compress: 0.55 },
 };
 
 export async function compressImage(

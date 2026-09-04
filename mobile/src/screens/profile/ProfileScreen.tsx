@@ -117,6 +117,7 @@ export function ProfileScreen() {
           <ProfileCard
             fullName={user.full_name}
             username={user.username}
+            userId={user.id}
             avatarUrl={user.avatar_url}
             onAvatarPress={handleAvatarPress}
             avatarLoading={uploadAvatar.isPending || removeAvatar.isPending}

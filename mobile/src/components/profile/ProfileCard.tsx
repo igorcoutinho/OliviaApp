@@ -5,6 +5,7 @@ import { ProfileAvatar } from './ProfileAvatar';
 interface Props {
   fullName: string;
   username: string;
+  userId?: string;
   avatarUrl?: string | null;
   onAvatarPress: () => void;
   avatarLoading?: boolean;
@@ -13,6 +14,7 @@ interface Props {
 export function ProfileCard({
   fullName,
   username,
+  userId,
   avatarUrl,
   onAvatarPress,
   avatarLoading,
@@ -21,6 +23,7 @@ export function ProfileCard({
     <View style={styles.card}>
       <ProfileAvatar
         name={fullName}
+        userId={userId}
         avatarUrl={avatarUrl}
         onPress={onAvatarPress}
         loading={avatarLoading}

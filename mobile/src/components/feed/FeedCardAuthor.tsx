@@ -19,17 +19,20 @@ function getInitials(name: string): string {
 }
 
 export function FeedCardAuthor({ fullName, createdAt, avatarUrl, authorId }: Props) {
+  const cacheKey = `avatar-${authorId ?? fullName}`;
+
   return (
     <View style={styles.row}>
       <View style={styles.avatarWrap}>
         {avatarUrl ? (
           <Image
-            source={{ uri: avatarUrl, cacheKey: `avatar-${authorId ?? fullName}` }}
+            source={{ uri: avatarUrl, cacheKey }}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             cachePolicy="memory-disk"
-            recyclingKey={`avatar-${authorId ?? fullName}`}
-            transition={150}
+            recyclingKey={cacheKey}
+            transition={0}
+            priority="high"
           />
         ) : (
           <Text style={styles.avatarText}>{getInitials(fullName)}</Text>
