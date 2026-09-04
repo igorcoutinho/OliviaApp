@@ -16,6 +16,9 @@ web-build/
 # backend tem repositório próprio (OliviaBff)
 backend/
 
+# painel web tem repositório próprio (WebControl)
+WebControl/
+
 # logs
 *.log
 npm-debug.*

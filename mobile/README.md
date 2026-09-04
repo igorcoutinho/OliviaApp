@@ -88,14 +88,24 @@ npm run submit:ios
 
 O `eas.json` já aponta `ascAppId: 6808076977`. Depois do submit, o build aparece no App Store Connect → TestFlight (pode levar alguns minutos de processamento da Apple).
 
-## Android (APK / Play)
+## Gerar build Android (produção → AAB / Play Store)
 
 ```bash
-# APK interno (preview)
-eas build --platform android --profile preview
+cd mobile
+npm run build:android
+# equivalente: APP_ENV=prd eas build --platform android --profile production-android
+```
 
-# AAB produção
-eas build --platform android --profile production
+Gera **AAB** e assina com o keystore **local** (`credentials.json` → `credentials/android/keystore.jks`).
+
+O EAS **não** lê `credentials/android/keystore.env`. Esse arquivo é só referência das senhas; quem manda é o `credentials.json` (já gitignored).
+
+Acompanhe em: [expo.dev](https://expo.dev) → projeto **festa-da-olivia** → Builds.
+
+APK interno (só se precisar instalar direto no aparelho):
+
+```bash
+eas build --platform android --profile preview
 ```
 
 ## Scripts úteis
@@ -105,6 +115,7 @@ eas build --platform android --profile production
 | `npm run start:local` | Expo + API local |
 | `npm run start:prd` | Expo + API produção |
 | `npm run build:ios` | EAS build iOS produção |
+| `npm run build:android` | EAS build Android AAB (keystore local) |
 | `npm run submit:ios` | Envia o último build iOS ao TestFlight |
 | `npm run fix` | Alinha versões nativas ao SDK 57 |
 

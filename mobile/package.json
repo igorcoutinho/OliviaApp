@@ -51,6 +51,7 @@
     "web": "APP_ENV=local expo start --web --port 8082",
     "fix": "expo install --fix",
     "build:ios": "APP_ENV=prd eas build --platform ios --profile production",
+    "build:android": "APP_ENV=prd eas build --platform android --profile production-android",
     "submit:ios": "eas submit --platform ios --profile production --latest"
   },
   "private": true
